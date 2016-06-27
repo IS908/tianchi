@@ -5,9 +5,13 @@ import java.io.Serializable;
 public class RaceConfig implements Serializable {
 
     // 这些是写tair key的前缀
-    public static String prex_tmall = "platformTmall_";
-    public static String prex_taobao = "platformTaobao_";
-    public static String prex_ratio = "ratio_";
+    // 淘宝每分钟的交易金额的key更新为platformTaobao_TeamCode_整分时间戳,
+    // 天猫每分钟的交易金额的key更新为platformTmall_TeamCode_整分时间戳,
+    // 每整分时刻无线和PC端总交易金额比值的key 更新为ratio_TeamCode_整分时间戳，
+    // TeamCode是每个队伍的唯一标识
+    public static String prex_tmall = "platformTmall_APU_";
+    public static String prex_taobao = "platformTaobao_APU";
+    public static String prex_ratio = "ratio_APU_";
 
 
     // 这些jstorm/rocketMq/tair 的集群配置信息，这些配置信息在正式提交代码前会被公布

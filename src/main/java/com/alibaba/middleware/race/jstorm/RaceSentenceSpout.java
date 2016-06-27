@@ -20,14 +20,8 @@ public class RaceSentenceSpout implements IRichSpout {
     private static Logger LOG = LoggerFactory.getLogger(RaceSentenceSpout.class);
 
     SpoutOutputCollector _collector;
-    Random _rand;
-    long sendingCount;
-    long startTime;
-    boolean isStatEnable;
-    int sendNumPerNexttuple;
 
     private int index = 0;
-
     private static final String[] CHOICES = {
             "marry had a little lamb whos fleese was white as snow",
             "and every where that marry went the lamb was sure to go",
@@ -39,28 +33,17 @@ public class RaceSentenceSpout implements IRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         LOG.debug(">>>>>> execute method open()");
         _collector = collector;
-        /*_rand = new Random();
-        sendingCount = 0;
-        startTime = System.currentTimeMillis();
-        sendNumPerNexttuple = JStormUtils.parseInt(conf.get("send.num.each.time"), 1);
-        isStatEnable = JStormUtils.parseBoolean(conf.get("is.stat.enable"), false);*/
     }
 
     @Override
     public void nextTuple() {
         LOG.debug(">>>>>> execute method nextTuple()");
-        if (index < CHOICES.length) {
-            this._collector.emit(new Values(CHOICES[index]));
-            index++;
+        this._collector.emit(new Values(CHOICES[index]));
+        index++;
+        if (index >= CHOICES.length) {
+            index = 0;
         }
-        Utils.sleep(1000);
-        /*int n = sendNumPerNexttuple;
-        while (--n >= 0) {
-            Utils.sleep(10);
-            String sentence = CHOICES[_rand.nextInt(CHOICES.length)];
-            _collector.emit(new Values(sentence));
-        }
-        updateSendTps();*/
+        Utils.sleep(2000);
     }
 
     @Override
@@ -79,20 +62,6 @@ public class RaceSentenceSpout implements IRichSpout {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         LOG.debug(">>>>>> execute method declareOutputFields()");
         declarer.declare(new Fields(RaceConfig.SPOUT_FILED_ID));
-    }
-
-    private void updateSendTps() {
-        if (!isStatEnable)
-            return;
-
-        sendingCount++;
-        long now = System.currentTimeMillis();
-        long interval = now - startTime;
-        if (interval > 60 * 1000) {
-            LOG.info("Sending tps of last one minute is " + (sendingCount * sendNumPerNexttuple * 1000) / interval);
-            startTime = now;
-            sendingCount = 0;
-        }
     }
 
     @Override

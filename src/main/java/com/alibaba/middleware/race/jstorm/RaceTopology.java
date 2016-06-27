@@ -42,11 +42,12 @@ public class RaceTopology {
 
         LOG.info("======>>>>>>切分词操作开始");
         builder.setBolt(RaceConfig.BOLT_SPLIT_ID, new SplitSentence(), split_Parallelism_hint)
+                //.setNumTasks(4)
                 .shuffleGrouping(RaceConfig.SPOUT_ID);
 
         LOG.info("======>>>>>>词计数操作开始");
         builder.setBolt(RaceConfig.BOLT_COUNT_ID, new WordCount(), count_Parallelism_hint)
-                .fieldsGrouping(RaceConfig.BOLT_SPLIT_ID, new Fields("word"));
+                .fieldsGrouping(RaceConfig.BOLT_SPLIT_ID, new Fields(RaceConfig.BOLT_FILED_ID));
 
         LOG.info("======>>>>>>打印统计结果操作开始");
         builder.setBolt(RaceConfig.BOLT_RESULT_ID, new CountResult(), result_Parallelism_hint)
@@ -54,19 +55,23 @@ public class RaceTopology {
 
         String topologyName = RaceConfig.JstormTopologyName;
 
-        // 本地debug的配置
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology(topologyName, conf, builder.createTopology());
-        Utils.sleep(20000);
-        cluster.killTopology(topologyName);
-        cluster.shutdown();
-
-        // 提交到作业时的配置
-        /*try {
-            StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
-        } catch (Exception e) {
-            LOG.error(e.getLocalizedMessage());
-            e.printStackTrace();
-        }*/
+        if (args.length == 0) {
+            // 本地debug的配置
+            LocalCluster cluster = new LocalCluster();
+            cluster.submitTopology(topologyName, conf, builder.createTopology());
+            Utils.sleep(20000);
+            cluster.killTopology(topologyName);
+            cluster.shutdown();
+        } else {
+            // 提交到作业时的配置
+            // TODO 打包修改pom包 jstorm-core 为 provided
+            // jstorm jar tianchi-1.0-SNAPSHOT.jar com.alibaba.middleware.race.jstorm.RaceTopology xxx
+            try {
+                StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
+            } catch (Exception e) {
+                LOG.error(e.getLocalizedMessage());
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -31,12 +31,6 @@ public class WordCount implements IRichBolt {
         count++;
         this.counts.put(word, count);
         this.collector.emit(new Values(word, count));
-        /*String word = tuple.getString(0);
-        Integer count = counts.get(word);
-        if (count == null)
-            count = 0;
-        counts.put(word, ++count);
-        collector.ack(tuple);*/
     }
 
     @Override
