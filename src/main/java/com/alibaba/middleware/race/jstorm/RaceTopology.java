@@ -1,11 +1,10 @@
 package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Fields;
-import backtype.storm.utils.Utils;
+import backtype.storm.generated.AlreadyAliveException;
+import backtype.storm.generated.InvalidTopologyException;
+import backtype.storm.generated.StormTopology;
 import com.alibaba.middleware.race.RaceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +22,34 @@ import org.slf4j.LoggerFactory;
  * 所以这个主类路径一定要正确
  */
 public class RaceTopology {
-
     private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
 
+    public static void main(String[] args) {
+        Config conf = new Config();
+        try {
+            StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology());
+        } catch (AlreadyAliveException e) {
+            LOG.error(e.getMessage());
+            e.printStackTrace();
+        } catch (InvalidTopologyException e) {
+            LOG.error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
-    public static void main(String[] args) throws Exception {
+    // TODO 正式逻辑在这里组织
+    private static StormTopology builtTopology() {
+        /*
+        * soup -->
+        * bolt -->
+        * bolt -->
+        * ...
+        * */
+        return null;
+    }
+
+    // 测试workcount示例代码
+    /*public static void main(String[] args) throws Exception {
 
         Config conf = new Config();
         int spout_Parallelism_hint = 1;
@@ -73,5 +95,5 @@ public class RaceTopology {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 }
