@@ -1,10 +1,11 @@
 package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
+import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
-import backtype.storm.generated.AlreadyAliveException;
-import backtype.storm.generated.InvalidTopologyException;
-import backtype.storm.generated.StormTopology;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.tuple.Fields;
+import backtype.storm.utils.Utils;
 import com.alibaba.middleware.race.RaceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,32 +25,40 @@ import org.slf4j.LoggerFactory;
 public class RaceTopology {
     private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         Config conf = new Config();
-        try {
-            StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology());
-        } catch (AlreadyAliveException e) {
-            LOG.error(e.getMessage());
-            e.printStackTrace();
-        } catch (InvalidTopologyException e) {
-            LOG.error(e.getMessage());
-            e.printStackTrace();
+        String topologyName = RaceConfig.JstormTopologyName;
+        if (args.length == 0) {
+            LocalCluster cluster = new LocalCluster();
+            cluster.submitTopology(topologyName, conf, builtTopology());
+            Utils.sleep(20000);
+            cluster.killTopology(topologyName);
+            cluster.shutdown();
+        } else {
+            try {
+                StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology());
+            } catch (AlreadyAliveException e) {
+                LOG.error(e.getMessage());
+                e.printStackTrace();
+            } catch (InvalidTopologyException e) {
+                LOG.error(e.getMessage());
+                e.printStackTrace();
+            }
         }
+
     }
 
     // TODO 正式逻辑在这里组织
     private static StormTopology builtTopology() {
-        /*
-        * soup -->
-        * bolt -->
-        * bolt -->
-        * ...
-        * */
-        return null;
-    }
+        RocketMQEventSpout spout = new RocketMQEventSpout();
+        TridentTopology topology = new TridentTopology();
+        Stream inputStream = topology.newStream(RaceConfig.SPOUT_ID, spout);
+        inputStream.each(new Fields(RaceConfig.SPLIT_ID), new Split(), new Fields("test"));
+        return topology.build();
+    }*/
 
-    // 测试workcount示例代码
-    /*public static void main(String[] args) throws Exception {
+    // 测试wordcount示例代码
+    public static void main(String[] args) throws Exception {
 
         Config conf = new Config();
         int spout_Parallelism_hint = 1;
@@ -60,19 +69,19 @@ public class RaceTopology {
         TopologyBuilder builder = new TopologyBuilder();
 
         LOG.info("======>>>>>>获取数据源开始");
-        builder.setSpout(RaceConfig.SPOUT_ID, new RaceSentenceSpout(), spout_Parallelism_hint);
+        builder.setSpout(RaceConfig.SPOUT_ID, new RaceEventSpout(), spout_Parallelism_hint);
 
         LOG.info("======>>>>>>切分词操作开始");
-        builder.setBolt(RaceConfig.BOLT_SPLIT_ID, new SplitSentence(), split_Parallelism_hint)
+        builder.setBolt(RaceConfig.BOLT_SPLIT_ID, new SplitStreamBolt(), split_Parallelism_hint)
                 //.setNumTasks(4)
                 .shuffleGrouping(RaceConfig.SPOUT_ID);
 
         LOG.info("======>>>>>>词计数操作开始");
-        builder.setBolt(RaceConfig.BOLT_COUNT_ID, new WordCount(), count_Parallelism_hint)
+        builder.setBolt(RaceConfig.BOLT_COUNT_ID, new PayCountBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.BOLT_SPLIT_ID, new Fields(RaceConfig.BOLT_FILED_ID));
 
         LOG.info("======>>>>>>打印统计结果操作开始");
-        builder.setBolt(RaceConfig.BOLT_RESULT_ID, new CountResult(), result_Parallelism_hint)
+        builder.setBolt(RaceConfig.BOLT_RESULT_ID, new CountResultBolt(), result_Parallelism_hint)
                 .globalGrouping(RaceConfig.BOLT_COUNT_ID);
 
         String topologyName = RaceConfig.JstormTopologyName;
@@ -81,7 +90,7 @@ public class RaceTopology {
             // 本地debug的配置
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
-            Utils.sleep(20000);
+            Utils.sleep(50000);
             cluster.killTopology(topologyName);
             cluster.shutdown();
         } else {
@@ -95,5 +104,5 @@ public class RaceTopology {
                 e.printStackTrace();
             }
         }
-    }*/
+    }
 }

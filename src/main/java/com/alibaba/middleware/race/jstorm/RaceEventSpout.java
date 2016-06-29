@@ -6,44 +6,47 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
-import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceUtils;
+import com.alibaba.middleware.race.model.OrderMessage;
+import com.alibaba.middleware.race.model.PaymentMessage;
+import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
+import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
+import com.alibaba.rocketmq.client.producer.SendCallback;
+import com.alibaba.rocketmq.client.producer.SendResult;
+import com.alibaba.rocketmq.common.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.Util;
 
 import java.util.Map;
 import java.util.Random;
 
-public class RaceSentenceSpout implements IRichSpout {
-    private static Logger LOG = LoggerFactory.getLogger(RaceSentenceSpout.class);
+public class RaceEventSpout implements IRichSpout {
+    private static Logger LOG = LoggerFactory.getLogger(RaceEventSpout.class);
 
     SpoutOutputCollector _collector;
 
-    private int index = 0;
-    private static final String[] CHOICES = {
-            "marry had a little lamb whos fleese was white as snow",
-            "and every where that marry went the lamb was sure to go",
-            "one two three four five six seven eight nine ten",
-            "this is a test of the emergency broadcast system this is only a test",
-            "peter piper picked a peck of pickeled peppers"};
+    DefaultMQPushConsumer consumer;
+
+    private static Random rand = new Random();
+
 
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
-        LOG.debug(">>>>>> execute method open()");
         _collector = collector;
+
     }
 
     @Override
     public void nextTuple() {
+        final int platform = rand.nextInt(2);
+        final OrderMessage orderMessage = ( platform == 0 ? OrderMessage.createTbaoMessage() : OrderMessage.createTmallMessage());
+        orderMessage.setCreateTime(System.currentTimeMillis());
+        PaymentMessage[] paymentMessages = PaymentMessage.createPayMentMsg(orderMessage);
         LOG.debug(">>>>>> execute method nextTuple()");
-        this._collector.emit(new Values(CHOICES[index]));
-        index++;
-        if (index >= CHOICES.length) {
-            index = 0;
+        for (PaymentMessage tmp : paymentMessages) {
+            this._collector.emit(new Values(tmp));
         }
-        Utils.sleep(2000);
     }
 
     @Override

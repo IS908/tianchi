@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WordCount implements IRichBolt {
-    private static Logger LOG = LoggerFactory.getLogger(WordCount.class);
+public class PayCountBolt implements IRichBolt {
+    private static Logger LOG = LoggerFactory.getLogger(PayCountBolt.class);
 
     OutputCollector collector;
     Map<String, Integer> counts;

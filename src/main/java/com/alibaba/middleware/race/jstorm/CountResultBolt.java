@@ -17,8 +17,8 @@ import java.util.Map;
 /**
  * Created by kevin on 16-6-26.
  */
-public class CountResult implements IRichBolt {
-    private static Logger LOG = LoggerFactory.getLogger(CountResult.class);
+public class CountResultBolt implements IRichBolt {
+    private static Logger LOG = LoggerFactory.getLogger(CountResultBolt.class);
 
     private HashMap<String, Integer> counts = null;
 

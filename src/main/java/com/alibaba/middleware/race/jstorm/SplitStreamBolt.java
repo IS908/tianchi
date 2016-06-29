@@ -1,33 +1,41 @@
 package com.alibaba.middleware.race.jstorm;
 
+import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.model.PaymentMessage;
 import com.esotericsoftware.minlog.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 
-public class SplitSentence implements IRichBolt {
-    private static Logger LOG = LoggerFactory.getLogger(SplitSentence.class);
+public class SplitStreamBolt implements IRichBolt {
+    private static Logger LOG = LoggerFactory.getLogger(SplitStreamBolt.class);
 
     OutputCollector collector;
 
     @Override
     public void execute(Tuple tuple) {
         LOG.debug(">>>>>> execute method execute()");
-        String sentence = tuple.getStringByField(RaceConfig.SPOUT_FILED_ID);
-        String[] words = sentence.split(" ");
-        for (String word : words) {
-            this.collector.emit(new Values(word));
+        List<Object> list = tuple.getValues();
+        System.out.println("###### " + list.size());
+        for (Object obj : list) {
+            PaymentMessage message = (PaymentMessage) obj;
+            long timestamp = message.getCreateTime() / 60000 * 60000;
+            System.out.println("######" + message);
+            Date date = new Date(timestamp);
+            System.out.println("######" + date.toString());
         }
+
     }
 
     @Override
@@ -45,14 +53,13 @@ public class SplitSentence implements IRichBolt {
     @Override
     public void cleanup() {
         LOG.debug(">>>>>> execute method cleanup()");
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
         Log.debug(">>>>>> execute method getComponentConfiguration()");
-        // TODO Auto-generated method stub
-        return null;
+        Config conf = new Config();
+        return conf;
     }
 }
