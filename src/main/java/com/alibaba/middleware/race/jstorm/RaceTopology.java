@@ -57,9 +57,11 @@ public class RaceTopology {
         return topology.build();
     }*/
 
-    // 测试wordcount示例代码
     public static void main(String[] args) throws Exception {
-
+        /*
+         * 全局config，局部配置在每个组件的 getComponentConfiguration() 方法中定义
+         * 优先级：局部 > 全局
+         */
         Config conf = new Config();
         int spout_Parallelism_hint = 1;
         int split_Parallelism_hint = 2;
@@ -68,21 +70,19 @@ public class RaceTopology {
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        LOG.info("======>>>>>>获取数据源开始");
-        builder.setSpout(RaceConfig.SPOUT_ID, new RaceEventSpout(), spout_Parallelism_hint);
+        builder.setSpout(RaceConfig.ID_DataSource, new RaceEventSpout(), spout_Parallelism_hint);
 
-        LOG.info("======>>>>>>切分词操作开始");
-        builder.setBolt(RaceConfig.BOLT_SPLIT_ID, new SplitStreamBolt(), split_Parallelism_hint)
-                //.setNumTasks(4)
-                .shuffleGrouping(RaceConfig.SPOUT_ID);
+        builder.setBolt(RaceConfig.ID_Split_Platform, new SplitStreamBolt(), split_Parallelism_hint)
+                .shuffleGrouping(RaceConfig.ID_DataSource);
 
-        LOG.info("======>>>>>>词计数操作开始");
-        builder.setBolt(RaceConfig.BOLT_COUNT_ID, new PayCountBolt(), count_Parallelism_hint)
-                .fieldsGrouping(RaceConfig.BOLT_SPLIT_ID, new Fields(RaceConfig.BOLT_FILED_ID));
+        builder.setBolt(RaceConfig.ID_PC_TimeStamp, new PayCountBolt(), count_Parallelism_hint)
+                .shuffleGrouping(RaceConfig.ID_Split_Platform, RaceConfig.Field_Platform_PC);
 
-        LOG.info("======>>>>>>打印统计结果操作开始");
-        builder.setBolt(RaceConfig.BOLT_RESULT_ID, new CountResultBolt(), result_Parallelism_hint)
-                .globalGrouping(RaceConfig.BOLT_COUNT_ID);
+        builder.setBolt(RaceConfig.ID_Wireless_TimeStamp, new PayCountBolt(), count_Parallelism_hint)
+                .shuffleGrouping(RaceConfig.ID_Split_Platform, RaceConfig.Field_Platform_Wireless);
+
+        /*builder.setBolt(RaceConfig.BOLT_RESULT_ID, new CountResultBolt(), result_Parallelism_hint)
+                .globalGrouping(RaceConfig.BOLT_COUNT_ID);*/
 
         String topologyName = RaceConfig.JstormTopologyName;
 
@@ -90,7 +90,7 @@ public class RaceTopology {
             // 本地debug的配置
             LocalCluster cluster = new LocalCluster();
             cluster.submitTopology(topologyName, conf, builder.createTopology());
-            Utils.sleep(50000);
+            Utils.sleep(30000);
             cluster.killTopology(topologyName);
             cluster.shutdown();
         } else {

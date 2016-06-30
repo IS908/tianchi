@@ -18,23 +18,17 @@ import com.alibaba.rocketmq.common.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class RaceEventSpout implements IRichSpout {
     private static Logger LOG = LoggerFactory.getLogger(RaceEventSpout.class);
 
     SpoutOutputCollector _collector;
-
-    DefaultMQPushConsumer consumer;
-
-    private static Random rand = new Random();
-
+    private static Random rand;
 
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
-
     }
 
     @Override
@@ -43,7 +37,8 @@ public class RaceEventSpout implements IRichSpout {
         final OrderMessage orderMessage = ( platform == 0 ? OrderMessage.createTbaoMessage() : OrderMessage.createTmallMessage());
         orderMessage.setCreateTime(System.currentTimeMillis());
         PaymentMessage[] paymentMessages = PaymentMessage.createPayMentMsg(orderMessage);
-        LOG.debug(">>>>>> execute method nextTuple()");
+        List<Object> list = new ArrayList<>();
+        //this._collector.emit(new Values(list));
         for (PaymentMessage tmp : paymentMessages) {
             this._collector.emit(new Values(tmp));
         }
@@ -51,46 +46,40 @@ public class RaceEventSpout implements IRichSpout {
 
     @Override
     public void ack(Object id) {
-        LOG.debug(">>>>>> execute method ack()");
         // Ignored
     }
 
     @Override
     public void fail(Object id) {
-        LOG.debug(">>>>>> execute method fail()");
         _collector.emit(new Values(id), id);
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        LOG.debug(">>>>>> execute method declareOutputFields()");
-        declarer.declare(new Fields(RaceConfig.SPOUT_FILED_ID));
+        declarer.declare(new Fields(RaceConfig.Field_DataSource));
     }
 
     @Override
     public void close() {
-        LOG.debug(">>>>>> execute method close()");
         // TODO Auto-generated method stub
 
     }
 
     @Override
     public void activate() {
-        LOG.debug(">>>>>> execute method activate()");
         // TODO Auto-generated method stub
 
     }
 
     @Override
     public void deactivate() {
-        LOG.debug(">>>>>> execute method deactivate()");
         // TODO Auto-generated method stub
 
     }
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        LOG.debug(">>>>>> execute method getComponentConfiguration()");
+        this.rand = new Random();
         // TODO Auto-generated method stub
         return null;
     }

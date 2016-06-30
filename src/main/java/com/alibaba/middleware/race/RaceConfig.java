@@ -26,14 +26,14 @@ public class RaceConfig implements Serializable {
     public static Integer TairNamespace = 45596;
 
     // jstorm的拓扑流程中的个组件的ID统一在此处设置
-    public static final String SPLIT_ID = "split";
+    public static final String ID_DataSource = "datasource";
+    public static final String Field_DataSource = "data";
 
+    public static final String ID_Split_Platform = "platform";
+    public static final String Field_Platform_PC = "pc";
+    public static final String Field_Platform_Wireless = "wireless";
 
-    public static final String SPOUT_ID = "spout";
-    public static final String BOLT_SPLIT_ID = "split";
-    public static final String BOLT_COUNT_ID = "count";
-    public static final String BOLT_RESULT_ID = "result";
+    public static final String ID_PC_TimeStamp = "PCTimestamp";
+    public static final String ID_Wireless_TimeStamp = "WirelessTimestamp";
 
-    public static final String SPOUT_FILED_ID = "sentence";
-    public static final String BOLT_FILED_ID = "word";
 }
