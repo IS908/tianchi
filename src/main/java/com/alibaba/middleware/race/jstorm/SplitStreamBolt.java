@@ -10,13 +10,9 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.model.PaymentMessage;
-import com.esotericsoftware.minlog.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 public class SplitStreamBolt implements IRichBolt {
@@ -34,14 +30,6 @@ public class SplitStreamBolt implements IRichBolt {
 		} else {// 无线端
 			collector.emit(RaceConfig.Field_Platform_Wireless, new Values(message));
 		}
-		/*
-		 * if (listPC.size() > 0) {
-		 * collector.emit(RaceConfig.Field_Platform_PC, new Values(listPC));
-		 * }
-		 * if (listWireless.size() > 0) {
-		 * collector.emit(RaceConfig.Field_Platform_Wireless, new Values(listWireless));
-		 * }
-		 */
 	}
 
 	@Override
@@ -52,19 +40,15 @@ public class SplitStreamBolt implements IRichBolt {
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-		LOG.debug(">>>>>> execute method prepare()");
 		this.collector = collector;
 	}
 
 	@Override
 	public void cleanup() {
-		LOG.debug(">>>>>> execute method cleanup()");
-
 	}
 
 	@Override
 	public Map<String, Object> getComponentConfiguration() {
-		Log.debug(">>>>>> execute method getComponentConfiguration()");
 		Config conf = new Config();
 		return conf;
 	}

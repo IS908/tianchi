@@ -7,24 +7,20 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
-import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
-import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
-import com.alibaba.rocketmq.client.producer.SendCallback;
-import com.alibaba.rocketmq.client.producer.SendResult;
-import com.alibaba.rocketmq.common.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Random;
 
 public class RaceEventSpout implements IRichSpout {
     private static Logger LOG = LoggerFactory.getLogger(RaceEventSpout.class);
 
     SpoutOutputCollector _collector;
     private static Random rand;
+    private OrderMessage orderMessage;
 
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
@@ -33,12 +29,8 @@ public class RaceEventSpout implements IRichSpout {
 
     @Override
     public void nextTuple() {
-        final int platform = rand.nextInt(2);
-        final OrderMessage orderMessage = ( platform == 0 ? OrderMessage.createTbaoMessage() : OrderMessage.createTmallMessage());
         orderMessage.setCreateTime(System.currentTimeMillis());
         PaymentMessage[] paymentMessages = PaymentMessage.createPayMentMsg(orderMessage);
-        List<Object> list = new ArrayList<>();
-        //this._collector.emit(new Values(list));
         for (PaymentMessage tmp : paymentMessages) {
             this._collector.emit(new Values(tmp));
         }
@@ -61,26 +53,23 @@ public class RaceEventSpout implements IRichSpout {
 
     @Override
     public void close() {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public void activate() {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void deactivate() {
-        // TODO Auto-generated method stub
 
     }
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
         this.rand = new Random();
-        // TODO Auto-generated method stub
+        int platform = rand.nextInt(2);
+        orderMessage = ( platform == 0 ? OrderMessage.createTbaoMessage() : OrderMessage.createTmallMessage());
         return null;
     }
 }

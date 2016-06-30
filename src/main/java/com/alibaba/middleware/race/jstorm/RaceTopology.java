@@ -3,8 +3,9 @@ package com.alibaba.middleware.race.jstorm;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
+import backtype.storm.generated.AlreadyAliveException;
+import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.tuple.Fields;
 import backtype.storm.utils.Utils;
 import com.alibaba.middleware.race.RaceConfig;
 import org.slf4j.Logger;
@@ -25,47 +26,36 @@ import org.slf4j.LoggerFactory;
 public class RaceTopology {
     private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
 
-    /*public static void main(String[] args) {
-        Config conf = new Config();
-        String topologyName = RaceConfig.JstormTopologyName;
-        if (args.length == 0) {
-            LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology(topologyName, conf, builtTopology());
-            Utils.sleep(20000);
-            cluster.killTopology(topologyName);
-            cluster.shutdown();
-        } else {
-            try {
-                StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology());
-            } catch (AlreadyAliveException e) {
-                LOG.error(e.getMessage());
-                e.printStackTrace();
-            } catch (InvalidTopologyException e) {
-                LOG.error(e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    // TODO 正式逻辑在这里组织
-    private static StormTopology builtTopology() {
-        RocketMQEventSpout spout = new RocketMQEventSpout();
-        TridentTopology topology = new TridentTopology();
-        Stream inputStream = topology.newStream(RaceConfig.SPOUT_ID, spout);
-        inputStream.each(new Fields(RaceConfig.SPLIT_ID), new Split(), new Fields("test"));
-        return topology.build();
-    }*/
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         /*
          * 全局config，局部配置在每个组件的 getComponentConfiguration() 方法中定义
          * 优先级：局部 > 全局
          */
         Config conf = new Config();
+        String topologyName = RaceConfig.JstormTopologyName;
+
+        LocalCluster cluster = new LocalCluster();
+        cluster.submitTopology(topologyName, conf, builtTopology().createTopology());
+        Utils.sleep(30000);
+        cluster.killTopology(topologyName);
+        cluster.shutdown();
+
+        /*try {
+            StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology().createTopology());
+        } catch (AlreadyAliveException e) {
+            LOG.error(e.getMessage());
+            e.printStackTrace();
+        } catch (InvalidTopologyException e) {
+            LOG.error(e.getMessage());
+            e.printStackTrace();
+        }*/
+    }
+
+    // TODO 正式逻辑在这里组织
+    private static TopologyBuilder builtTopology() {
         int spout_Parallelism_hint = 1;
-        int split_Parallelism_hint = 2;
-        int count_Parallelism_hint = 2;
+        int split_Parallelism_hint = 1;
+        int count_Parallelism_hint = 1;
         int result_Parallelism_hint = 1;
 
         TopologyBuilder builder = new TopologyBuilder();
@@ -83,26 +73,6 @@ public class RaceTopology {
 
         /*builder.setBolt(RaceConfig.BOLT_RESULT_ID, new CountResultBolt(), result_Parallelism_hint)
                 .globalGrouping(RaceConfig.BOLT_COUNT_ID);*/
-
-        String topologyName = RaceConfig.JstormTopologyName;
-
-        if (args.length == 0) {
-            // 本地debug的配置
-            LocalCluster cluster = new LocalCluster();
-            cluster.submitTopology(topologyName, conf, builder.createTopology());
-            Utils.sleep(30000);
-            cluster.killTopology(topologyName);
-            cluster.shutdown();
-        } else {
-            // 提交到作业时的配置
-            // TODO 打包修改pom包 jstorm-core 为 provided
-            // jstorm jar tianchi-1.0-SNAPSHOT.jar com.alibaba.middleware.race.jstorm.RaceTopology xxx
-            try {
-                StormSubmitter.submitTopology(topologyName, conf, builder.createTopology());
-            } catch (Exception e) {
-                LOG.error(e.getLocalizedMessage());
-                e.printStackTrace();
-            }
-        }
+        return builder;
     }
 }
