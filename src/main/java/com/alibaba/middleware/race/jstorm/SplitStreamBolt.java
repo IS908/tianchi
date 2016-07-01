@@ -1,5 +1,13 @@
 package com.alibaba.middleware.race.jstorm;
 
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.model.PaymentMessage;
+
 import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -8,12 +16,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.model.PaymentMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 public class SplitStreamBolt implements IRichBolt {
 	private static Logger LOG = LoggerFactory.getLogger(SplitStreamBolt.class);

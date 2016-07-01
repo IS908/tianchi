@@ -1,15 +1,17 @@
 package com.alibaba.middleware.race.jstorm;
 
-import backtype.storm.Config;
-import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
-import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.utils.Utils;
-import com.alibaba.middleware.race.RaceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.alibaba.middleware.race.RaceConfig;
+
+import backtype.storm.Config;
+import backtype.storm.LocalCluster;
+import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.utils.Utils;
 
 
 /**
@@ -40,7 +42,7 @@ public class RaceTopology {
         cluster.killTopology(topologyName);
         cluster.shutdown();
 
-        /*try {
+        try {
             StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology().createTopology());
         } catch (AlreadyAliveException e) {
             LOG.error(e.getMessage());
@@ -48,7 +50,7 @@ public class RaceTopology {
         } catch (InvalidTopologyException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
-        }*/
+        }
     }
 
     // TODO 正式逻辑在这里组织

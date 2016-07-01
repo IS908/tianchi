@@ -1,12 +1,6 @@
 package com.alibaba.middleware.race.jstorm.rocketmq;
 
-import com.alibaba.jstorm.utils.JStormUtils;
-import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
-import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
 import org.apache.log4j.Logger;
-
-import java.util.Date;
 
 /**
  * Created by kevin on 16-6-29.

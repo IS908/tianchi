@@ -1,7 +1,8 @@
 package com.alibaba.middleware.race.Tair;
 
-import com.alibaba.middleware.race.RaceConfig;
 import java.io.Serializable;
+
+import com.alibaba.middleware.race.RaceConfig;
 
 
 /**
