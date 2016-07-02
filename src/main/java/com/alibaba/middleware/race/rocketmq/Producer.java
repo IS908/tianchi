@@ -31,10 +31,10 @@ public class Producer {
      * @throws InterruptedException
      */
     public static void main(String[] args) throws MQClientException, InterruptedException {
-        DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
+        DefaultMQProducer producer = new DefaultMQProducer(RaceConfig.MetaConsumerGroup);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        producer.setNamesrvAddr("192.168.1.10:9876");
+        producer.setNamesrvAddr(RaceConfig.mqIP);
         producer.start();
 
         final String [] topics = new String[]{RaceConfig.MqTaobaoTradeTopic, RaceConfig.MqTmallTradeTopic};
