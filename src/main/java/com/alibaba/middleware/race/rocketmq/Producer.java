@@ -32,7 +32,7 @@ public class Producer {
     public static void main(String[] args) throws MQClientException, InterruptedException {
         DefaultMQProducer producer = new DefaultMQProducer(RaceConfig.MetaConsumerGroup);
 
-        // TODO 在本地搭建好broker后,记得指定nameServer的地址
+        // 在本地搭建好broker后,记得指定nameServer的地址
         producer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
         producer.start();
 

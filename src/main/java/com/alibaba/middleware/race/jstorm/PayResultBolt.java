@@ -39,7 +39,7 @@ public class PayResultBolt implements IRichBolt {
         Double pcSum = null;
         Double wirelessSum = null;
         /*
-        * TODO 此处的逻辑待完善
+        * 此处的逻辑待完善
         * */
         if (message.getPlatform() == 0) {
             Double pcAccount = PCMap.get(timestamp);
@@ -67,9 +67,7 @@ public class PayResultBolt implements IRichBolt {
     @Override
     public void cleanup() {
         // 关闭前将最后的结果写入 tair 中
-        Iterator<Map.Entry<Long, Double>> iteratorPC = PCMap.entrySet().iterator();
-        while (iteratorPC.hasNext()) {
-            Map.Entry<Long, Double> map = iteratorPC.next();
+        for (Map.Entry<Long, Double> map : PCMap.entrySet()) {
             Double wirelessSum = WirelessMap.get(map.getKey());
             if (wirelessSum != null) {
                 TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + map.getKey(), wirelessSum / map.getValue());

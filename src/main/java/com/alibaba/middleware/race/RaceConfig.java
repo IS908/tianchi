@@ -3,9 +3,10 @@ package com.alibaba.middleware.race;
 import java.io.Serializable;
 
 public class RaceConfig implements Serializable {
+    private static final long serialVersionUID = -4749404316518001259L;
 
     // TODO rocketMQ的nameserver地址及端口统一在此配置
-    public static final String MQ_NAME_SERVER = "192.168.1.10:9876";
+    public static final String MQ_NAME_SERVER = "127.0.0.1:9876";
 
     // jstorm的拓扑流程中的个组件的ID统一在此处设置
     // ComponentID
@@ -38,7 +39,6 @@ public class RaceConfig implements Serializable {
 
     public static final String FIELD_PAY_SUM = "FIELD_PAY_SUM";
     public static final String FIELD_ORDER_SUM = "FIELD_ORDER_SUM";
-
 
 
     /* =================================================================

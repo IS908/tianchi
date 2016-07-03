@@ -42,16 +42,13 @@ public class RaceTopology {
 //        TODO 打包上传需注释上面 LocalCluster 部分，开启下面部分；同时 pom 包要开启 jstorm 的 provided
         try {
             StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology().createTopology());
-        } catch (AlreadyAliveException e) {
-            LOG.error(e.getMessage());
-            e.printStackTrace();
-        } catch (InvalidTopologyException e) {
+        } catch (AlreadyAliveException | InvalidTopologyException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
         }
     }
 
-    // TODO 正式逻辑在这里组织
+    // 正式逻辑在这里组织
     private static TopologyBuilder builtTopology() {
         int spout_Parallelism_hint = 1;
         int split_Parallelism_hint = 1;
