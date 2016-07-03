@@ -13,6 +13,7 @@ import com.alibaba.middleware.race.model.SumMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,7 +73,18 @@ public class OrderCountBolt implements IRichBolt {
 
     @Override
     public void cleanup() {
+        // 该类的流程完成后的清理操作，supervisor会执行 kill -9 的操作，因此并不能保证会执行
+        Iterator<Map.Entry<Long, Double>> iteratorPC = tbMap.entrySet().iterator();
+        while (iteratorPC.hasNext()) {
+            Map.Entry<Long, Double> map = iteratorPC.next();
+            this.collector.emit(new Values(new SumMessage(map.getKey(), 0, map.getValue())));
+        }
 
+        Iterator<Map.Entry<Long, Double>> iteratorWireless = tmMap.entrySet().iterator();
+        while (iteratorWireless.hasNext()) {
+            Map.Entry<Long, Double> map = iteratorWireless.next();
+            this.collector.emit(new Values(new SumMessage(map.getKey(), 1, map.getValue())));
+        }
     }
 
     @Override

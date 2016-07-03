@@ -11,6 +11,7 @@ import com.alibaba.middleware.race.model.SumMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,14 +42,14 @@ public class OrderResultBolt implements IRichBolt {
         }
     }
 
-    private void opRresult (String key, SumMessage message, ConcurrentHashMap<Long, Double> map) {
+    private void opRresult(String key, SumMessage message, ConcurrentHashMap<Long, Double> map) {
         Long timestamp = message.getTimestamp();
         Double account = map.get(timestamp);
         if (account == null) {
             account = 0.0d;
             Double res = map.get(timestamp - 60L);
             TairOperatorImpl.getInstance().write(key + timestamp, res);
-            map.remove(timestamp - 120L);
+            map.remove(timestamp - 180L);
         }
         account += message.getTotal();
         map.put(timestamp, account);
@@ -56,7 +57,18 @@ public class OrderResultBolt implements IRichBolt {
 
     @Override
     public void cleanup() {
+        // 关闭前将最后的结果写入 tair 中
+        Iterator<Map.Entry<Long, Double>> iteratorTB = tbMap.entrySet().iterator();
+        while (iteratorTB.hasNext()) {
+            Map.Entry<Long, Double> map = iteratorTB.next();
+            TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + map.getKey(), map.getValue());
+        }
 
+        Iterator<Map.Entry<Long, Double>> iteratorTM = tmMap.entrySet().iterator();
+        while (iteratorTM.hasNext()) {
+            Map.Entry<Long, Double> map = iteratorTM.next();
+            TairOperatorImpl.getInstance().write(RaceConfig.prex_tmall + map.getKey(), map.getValue());
+        }
     }
 
     @Override

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 
 public class PayCountBolt implements IRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(PayCountBolt.class);
@@ -69,19 +70,18 @@ public class PayCountBolt implements IRichBolt {
 
     @Override
     public void cleanup() {
-        // TODO 该类的流程完成后的清理操作，supervisor会执行 kill -9 的操作，因此并不能保证会执行
+        // 该类的流程完成后的清理操作，supervisor会执行 kill -9 的操作，因此并不能保证会执行
         Iterator<Map.Entry<Long, Double>> iteratorPC = PCMap.entrySet().iterator();
         while (iteratorPC.hasNext()) {
             Map.Entry<Long, Double> map = iteratorPC.next();
-            LOG.info(">>> PC端：" + map.getKey() + "\t-->\t" + map.getValue());
+            this.collector.emit(new Values(new SumMessage(map.getKey(), 0, map.getValue())));
         }
 
         Iterator<Map.Entry<Long, Double>> iteratorWireless = WirelessMap.entrySet().iterator();
         while (iteratorWireless.hasNext()) {
             Map.Entry<Long, Double> map = iteratorWireless.next();
-            LOG.info(">>> 无线端：" + map.getKey() + "\t-->\t" + map.getValue());
+            this.collector.emit(new Values(new SumMessage(map.getKey(), 1, map.getValue())));
         }
-
     }
 
     @Override

@@ -91,15 +91,14 @@ public class RocketMqSpout implements IRichSpout, MessageListenerConcurrently {
             if (RaceConfig.MqPayTopic.equals(topic)) {
                 PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
                 collector.emit(new Values(paymentMessage));
-                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(paymentMessage));
+//                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(paymentMessage));
             } else if (RaceConfig.MqTaobaoTradeTopic.equals(topic) || RaceConfig.MqTmallTradeTopic.equals(topic)) {
                 OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
                 collector.emit(new Values(orderMessage));
-                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(orderMessage));
+//                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(orderMessage));
             } else {
-                LOGGER.info("topic={}, message=other", topic);
+//                LOGGER.info("topic={}, message=other", topic);
             }
-
         }
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }

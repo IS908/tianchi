@@ -5,6 +5,8 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.model.SumMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,8 @@ public class PayResultBolt implements IRichBolt {
         Object obj = tuple.getValue(0);
         SumMessage message = (SumMessage) obj;
         Long timestamp = message.getTimestamp();
+        Double pcSum = null;
+        Double wirelessSum = null;
         /*
         * TODO 此处的逻辑待完善
         * */
@@ -43,36 +47,33 @@ public class PayResultBolt implements IRichBolt {
                 pcAccount = 0.0d;
             }
             PCMap.put(timestamp, pcAccount + message.getTotal());
-            Double res = PCMap.get(timestamp - 60);
-            // TODO 执行写入tair操作// TODO
-            LOG.info("$$$" + res);
+            pcSum = PCMap.get(timestamp - 60L);
         } else {
             Double wirelessAccount = WirelessMap.get(timestamp);
             if (wirelessAccount == null) {
                 wirelessAccount = 0.0d;
             }
             WirelessMap.put(timestamp, wirelessAccount + message.getTotal());
-            Double res = WirelessMap.get(timestamp - 60);
-            // TODO 执行写入tair操作// TODO
-            LOG.info("$$$" + res);
+            wirelessSum = WirelessMap.get(timestamp - 60L);
+        }
+        // 执行写tair操作
+        if (pcSum != null && wirelessSum != null) {
+            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + timestamp, wirelessSum / pcSum);
+            PCMap.remove(timestamp - 180L);
+            WirelessMap.remove(timestamp - 180L);
         }
     }
 
     @Override
     public void cleanup() {
-        // TODO 关闭i前将做后的结果写入 tair 中
+        // 关闭前将最后的结果写入 tair 中
         Iterator<Map.Entry<Long, Double>> iteratorPC = PCMap.entrySet().iterator();
         while (iteratorPC.hasNext()) {
             Map.Entry<Long, Double> map = iteratorPC.next();
-            // TODO 执行写入tair操作
-            LOG.info(">>> PC端：" + map.getKey() + "\t-->\t" + map.getValue());
-        }
-
-        Iterator<Map.Entry<Long, Double>> iteratorWireless = WirelessMap.entrySet().iterator();
-        while (iteratorWireless.hasNext()) {
-            Map.Entry<Long, Double> map = iteratorWireless.next();
-            // TODO 执行写入tair操作
-            LOG.info(">>> 无线端：" + map.getKey() + "\t-->\t" + map.getValue());
+            Double wirelessSum = WirelessMap.get(map.getKey());
+            if (wirelessSum != null) {
+                TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + map.getKey(), wirelessSum / map.getValue());
+            }
         }
     }
 
