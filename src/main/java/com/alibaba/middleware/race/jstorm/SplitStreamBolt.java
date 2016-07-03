@@ -28,16 +28,16 @@ public class SplitStreamBolt implements IRichBolt {
 		PaymentMessage message = (PaymentMessage) obj;
 		// 按平台划分数据流
 		if (message.getPayPlatform() == 0) {// PC 端
-			collector.emit(RaceConfig.Field_Platform_PC, new Values(message));
+			collector.emit(RaceConfig.FIELD_PLATFORM_PC, new Values(message));
 		} else {// 无线端
-			collector.emit(RaceConfig.Field_Platform_Wireless, new Values(message));
+			collector.emit(RaceConfig.FIELD_PLATFORM_WIRELESS, new Values(message));
 		}
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declareStream(RaceConfig.Field_Platform_PC, new Fields("pcc"));
-		declarer.declareStream(RaceConfig.Field_Platform_Wireless, new Fields("wirelesss"));
+		declarer.declareStream(RaceConfig.FIELD_PLATFORM_PC, new Fields(RaceConfig.FIELD_PAY_PC));
+		declarer.declareStream(RaceConfig.FIELD_PLATFORM_WIRELESS, new Fields(RaceConfig.FIELD_PAY_WIRELESS));
 	}
 
 	@Override

@@ -1,17 +1,12 @@
 package com.alibaba.middleware.race.jstorm;
 
-import backtype.storm.StormSubmitter;
-import backtype.storm.generated.AlreadyAliveException;
-import backtype.storm.generated.InvalidTopologyException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.middleware.race.RaceConfig;
-
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.utils.Utils;
+import backtype.storm.tuple.Fields;
+import com.alibaba.middleware.race.RaceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -60,24 +55,36 @@ public class RaceTopology {
     private static TopologyBuilder builtTopology() {
         int spout_Parallelism_hint = 1;
         int split_Parallelism_hint = 1;
-        int count_Parallelism_hint = 1;
+        int count_Parallelism_hint = 2;
         int result_Parallelism_hint = 1;
+
+        // 获取订单数据
+        RaceOrderMessageSpout orderSource = new RaceOrderMessageSpout();
+
+
+        // 获取支付数据
+        RacePaymentMessageSpout paySource = new RacePaymentMessageSpout();
+        SplitStreamBolt splitBolt = new SplitStreamBolt();
 
         TopologyBuilder builder = new TopologyBuilder();
 
-        builder.setSpout(RaceConfig.ID_DataSource, new RaceEventSpout(), spout_Parallelism_hint);
+        //  从rocketMQ中拉取数据
+        /*builder.setSpout(RaceConfig.ID_ORDER_SOURCE, orderSource, spout_Parallelism_hint);*/
 
-        builder.setBolt(RaceConfig.ID_Split_Platform, new SplitStreamBolt(), split_Parallelism_hint)
-                .shuffleGrouping(RaceConfig.ID_DataSource);
+        builder.setSpout(RaceConfig.ID_PAY_SOURCE, paySource, spout_Parallelism_hint);
 
-        builder.setBolt(RaceConfig.ID_PC_TimeStamp, new PayCountBolt(), count_Parallelism_hint)
-                .shuffleGrouping(RaceConfig.ID_Split_Platform, RaceConfig.Field_Platform_PC);
+        builder.setBolt(RaceConfig.ID_SPLIT_PLATFORM, splitBolt, split_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.ID_PAY_SOURCE, new Fields(RaceConfig.FIELD_PAY_DATA));
 
-        builder.setBolt(RaceConfig.ID_Wireless_TimeStamp, new PayCountBolt(), count_Parallelism_hint)
-                .shuffleGrouping(RaceConfig.ID_Split_Platform, RaceConfig.Field_Platform_Wireless);
+        builder.setBolt(RaceConfig.ID_PC_TIME_STAMP, new PayCountBolt(), count_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.FIELD_PLATFORM_PC, new Fields(RaceConfig.FIELD_PAY_PC));
 
-        /*builder.setBolt(RaceConfig.BOLT_RESULT_ID, new CountResultBolt(), result_Parallelism_hint)
-                .globalGrouping(RaceConfig.BOLT_COUNT_ID);*/
+        builder.setBolt(RaceConfig.ID_WIRELESS_TIME_STAMP, new PayCountBolt(), count_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.FIELD_PLATFORM_WIRELESS, new Fields(RaceConfig.FIELD_PAY_WIRELESS));
+
+        builder.setBolt(RaceConfig.ID_PAY_RATIO, new CountResultBolt(), result_Parallelism_hint)
+                .globalGrouping(RaceConfig.ID_PC_TIME_STAMP)
+                .globalGrouping(RaceConfig.ID_WIRELESS_TIME_STAMP);
         return builder;
     }
 }

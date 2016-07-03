@@ -16,27 +16,27 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 
 
 /**
- * Consumer，订阅消息
+ * PaymentConsumer，订阅消息
  */
 
 /**
  * RocketMq消费组信息我们都会再正式提交代码前告知选手
  */
-public class Consumer {
+public class PaymentConsumer {
 
-    public static DefaultMQPushConsumer getConsumer(final BlockingQueue<PaymentMessage> queue) throws MQClientException {
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
+    public static DefaultMQPushConsumer getConsumer(String mqTopic, final BlockingQueue<PaymentMessage> queue) throws MQClientException {
+        DefaultMQPushConsumer pay_consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
         /**
          * 设置Consumer第一次启动是从队列头部开始消费还是队列尾部开始消费<br>
          * 如果非第一次启动，那么按照上次消费的位置继续消费
          */
-        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+        pay_consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        consumer.setNamesrvAddr(RaceConfig.mqIP);
+        pay_consumer.setNamesrvAddr(RaceConfig.mqIP);
         
-        consumer.subscribe(RaceConfig.MqPayTopic, "*");
-        consumer.registerMessageListener(new MessageListenerConcurrently() {
+        pay_consumer.subscribe(mqTopic, "*");
+        pay_consumer.registerMessageListener(new MessageListenerConcurrently() {
 
             @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
@@ -54,9 +54,9 @@ public class Consumer {
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
-        consumer.start();
-        System.out.println("Consumer Started.");
-        return consumer;
+        pay_consumer.start();
+        System.out.println("PaymentConsumer Started.");
+        return pay_consumer;
     }
 
     public static void main(String[] args) throws InterruptedException, MQClientException {
@@ -96,6 +96,6 @@ public class Consumer {
 
         consumer.start();
 
-        System.out.println("Consumer Started.");
+        System.out.println("PaymentConsumer Started.");
     }
 }

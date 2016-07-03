@@ -1,27 +1,26 @@
 package com.alibaba.middleware.race.jstorm;
 
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.model.PaymentMessage;
-import com.alibaba.middleware.race.rocketmq.Consumer;
-import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
-import com.alibaba.rocketmq.client.exception.MQClientException;
-
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.model.PaymentMessage;
+import com.alibaba.middleware.race.rocketmq.PaymentConsumer;
+import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
+import com.alibaba.rocketmq.client.exception.MQClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class RaceEventSpout implements IRichSpout {
-    private static Logger LOG = LoggerFactory.getLogger(RaceEventSpout.class);
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+
+public class RacePaymentMessageSpout implements IRichSpout {
+    private static final long serialVersionUID = 2586322232344555988L;
+    private static Logger LOG = LoggerFactory.getLogger(RacePaymentMessageSpout.class);
 
     SpoutOutputCollector collector;
     private BlockingQueue<PaymentMessage> queue = new LinkedBlockingDeque<>();
@@ -31,12 +30,11 @@ public class RaceEventSpout implements IRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
         try {
-            this.consumer = Consumer.getConsumer(this.queue);
+            this.consumer = PaymentConsumer.getConsumer(RaceConfig.MqPayTopic, this.queue);
         } catch (MQClientException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
         }
-
     }
 
     @Override
@@ -50,7 +48,7 @@ public class RaceEventSpout implements IRichSpout {
         } else {
             PaymentMessage paymentMessage = queue.poll();
             if (paymentMessage != null) {
-                this.collector.emit(new Values(paymentMessage));
+                this.collector.emit("", new Values(paymentMessage));
             }
         }
 
@@ -69,7 +67,7 @@ public class RaceEventSpout implements IRichSpout {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(RaceConfig.Field_DataSource));
+        declarer.declare(new Fields(RaceConfig.FIELD_PAY_DATA));
     }
 
     @Override

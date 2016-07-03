@@ -8,15 +8,28 @@ public class RaceConfig implements Serializable {
     public static final String mqIP = "192.168.1.10:9876";
 
     // TODO jstorm的拓扑流程中的个组件的ID统一在此处设置
-    public static final String ID_DataSource = "datasource";
-    public static final String Field_DataSource = "data";
+    // ComponentID
+    public static final String ID_PAY_SOURCE = "paysource";//
+    public static final String ID_ORDER_SOURCE = "ordersource";
+    public static final String ID_SPLIT_PLATFORM = "platform";//
+    public static final String ID_PC_TIME_STAMP = "PCTimestamp";//
+    public static final String ID_WIRELESS_TIME_STAMP = "WirelessTimestamp";//
+    public static final String ID_PAY_RATIO = "payRatio";//
 
-    public static final String ID_Split_Platform = "platform";
-    public static final String Field_Platform_PC = "pc";
-    public static final String Field_Platform_Wireless = "wireless";
+    // StreamID
+    public static final String ID_PAY_STREAM = "paystream";
+    public static final String Stream_pay_pc = "stream_pc";
+    public static final String Stream_pay_wireless = "stream_wireless";
+    public static final String Stream_count_pc = "streamCountPC";
 
-    public static final String ID_PC_TimeStamp = "PCTimestamp";
-    public static final String ID_Wireless_TimeStamp = "WirelessTimestamp";
+    // FieldName
+    public static final String FIELD_PAY_DATA = "paydata";
+    public static final String FIELD_PAY_SUM = "paysum";
+    public static final String FIELD_PAY_PC = "pcfield";
+    public static final String FIELD_PAY_WIRELESS = "wirelessfield";
+    public static final String FIELD_ACCOUNT = "account_sum";
+    public static final String FIELD_PLATFORM_PC = "pc";
+    public static final String FIELD_PLATFORM_WIRELESS = "wireless";
 
 
     /* =================================================================
