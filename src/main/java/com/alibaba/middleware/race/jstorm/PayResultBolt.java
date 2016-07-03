@@ -11,7 +11,6 @@ import com.alibaba.middleware.race.model.SumMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -62,6 +61,7 @@ public class PayResultBolt implements IRichBolt {
             PCMap.remove(timestamp - 180L);
             WirelessMap.remove(timestamp - 180L);
         }
+        LOG.info("message={}", message);
     }
 
     @Override

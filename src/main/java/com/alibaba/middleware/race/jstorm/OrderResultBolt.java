@@ -40,6 +40,7 @@ public class OrderResultBolt implements IRichBolt {
         } else {
             this.opRresult(RaceConfig.prex_tmall, message, tmMap);
         }
+        LOG.info("message={}", message);
     }
 
     private void opRresult(String key, SumMessage message, ConcurrentHashMap<Long, Double> map) {

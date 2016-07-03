@@ -38,7 +38,7 @@ public class OrderCountBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
         OrderMessage message = (OrderMessage) obj;
-        LOG.info("ordermessage={}", message);
+//        LOG.info("ordermessage={}", message);
         Long timestamp = message.getCreateTime() / (60 * 1000) * 60;
         Double sum = null;
         int platform = 0;
