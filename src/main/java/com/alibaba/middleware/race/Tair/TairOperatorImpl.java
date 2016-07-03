@@ -1,9 +1,5 @@
 package com.alibaba.middleware.race.Tair;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
-
 import com.alibaba.middleware.race.RaceConfig;
 import com.taobao.tair.DataEntry;
 import com.taobao.tair.Result;
@@ -19,9 +15,7 @@ public class TairOperatorImpl {
     private DefaultTairManager tairManager;
     private int namespace;
 
-
-
-    private TairOperatorImpl(String masterConfigServer, String slaveConfigServer, String groupName, int namespace) {
+    public TairOperatorImpl(String masterConfigServer, String slaveConfigServer, String groupName, int namespace) {
         tairManager = new DefaultTairManager();
         List<String> configServerList = Arrays.asList(masterConfigServer, slaveConfigServer);
         tairManager.setConfigServerList(configServerList);
@@ -38,10 +32,8 @@ public class TairOperatorImpl {
 
     public Object get(Serializable key) {
         Result<DataEntry> result = tairManager.get(namespace, key);
-        if (result.isSuccess()) {
-            if (result.getValue() != null) {
-                return result.getValue().getValue();
-            }
+        if (result.isSuccess() && result.getValue() != null) {
+            return result.getValue().getValue();
         }
         return null;
     }
@@ -57,7 +49,9 @@ public class TairOperatorImpl {
 
     //天猫的分钟交易额写入tair
     public static void main(String[] args) throws Exception {
-        TairOperatorImpl tairOperator = TairOperatorImpl.getInstance();
+        TairOperatorImpl tairOperator =
+                new TairOperatorImpl(RaceConfig.TairConfigServer, RaceConfig.TairSalveConfigServer,
+                                            RaceConfig.TairGroup, RaceConfig.TairNamespace);
         //假设这是付款时间
         Long millisTime = System.currentTimeMillis();
         //由于整分时间戳是10位数，所以需要转换成整分时间戳

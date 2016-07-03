@@ -33,7 +33,7 @@ public class Consumer {
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        consumer.setNamesrvAddr("192.168.1.10:9876");
+        consumer.setNamesrvAddr(RaceConfig.mqIP);
         
         consumer.subscribe(RaceConfig.MqPayTopic, "*");
         consumer.registerMessageListener(new MessageListenerConcurrently() {
@@ -60,7 +60,7 @@ public class Consumer {
     }
 
     public static void main(String[] args) throws InterruptedException, MQClientException {
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("41413few7x");
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
 
         /**
          * 设置Consumer第一次启动是从队列头部开始消费还是队列尾部开始消费<br>
@@ -69,7 +69,7 @@ public class Consumer {
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        consumer.setNamesrvAddr("127.0.0.1:9876");
+        consumer.setNamesrvAddr(RaceConfig.mqIP);
 
         consumer.subscribe(RaceConfig.MqPayTopic, "*");
 
