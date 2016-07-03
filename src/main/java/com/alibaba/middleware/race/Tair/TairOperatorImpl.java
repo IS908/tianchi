@@ -1,14 +1,13 @@
 package com.alibaba.middleware.race.Tair;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
-
 import com.alibaba.middleware.race.RaceConfig;
 import com.taobao.tair.DataEntry;
 import com.taobao.tair.Result;
 import com.taobao.tair.ResultCode;
 import com.taobao.tair.impl.DefaultTairManager;
+
+import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * 读写tair所需要的集群信息，如masterConfigServer/slaveConfigServer地址/

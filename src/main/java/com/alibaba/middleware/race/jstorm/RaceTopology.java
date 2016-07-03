@@ -1,7 +1,9 @@
 package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
+import backtype.storm.StormSubmitter;
+import backtype.storm.generated.AlreadyAliveException;
+import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
 import com.alibaba.middleware.race.RaceConfig;
@@ -32,15 +34,15 @@ public class RaceTopology {
         String topologyName = RaceConfig.JstormTopologyName;
 
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology(topologyName, conf, builtTopology().createTopology());
+//        LocalCluster cluster = new LocalCluster();
+//        cluster.submitTopology(topologyName, conf, builtTopology().createTopology());
 //        本地调试设定运行时间
 //        Utils.sleep(30000);
 //        cluster.killTopology(topologyName);
 //        cluster.shutdown();
 
 //        TODO 打包上传需注释上面 LocalCluster 部分，开启下面部分；同时 pom 包要开启 jstorm 的 provided
-        /*try {
+        try {
             StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology().createTopology());
         } catch (AlreadyAliveException e) {
             LOG.error(e.getMessage());
@@ -48,7 +50,7 @@ public class RaceTopology {
         } catch (InvalidTopologyException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
-        }*/
+        }
     }
 
     // TODO 正式逻辑在这里组织
@@ -57,10 +59,6 @@ public class RaceTopology {
         int split_Parallelism_hint = 1;
         int count_Parallelism_hint = 2;
         int result_Parallelism_hint = 1;
-
-        // 获取订单数据
-        RaceOrderMessageSpout orderSource = new RaceOrderMessageSpout();
-
 
         // 获取支付数据
         RacePaymentMessageSpout paySource = new RacePaymentMessageSpout();

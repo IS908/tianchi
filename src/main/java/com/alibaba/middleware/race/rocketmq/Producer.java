@@ -1,8 +1,5 @@
 package com.alibaba.middleware.race.rocketmq;
 
-import java.util.Random;
-import java.util.concurrent.Semaphore;
-
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
@@ -12,6 +9,9 @@ import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
 import com.alibaba.rocketmq.client.producer.SendCallback;
 import com.alibaba.rocketmq.client.producer.SendResult;
 import com.alibaba.rocketmq.common.message.Message;
+
+import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 /**
  * Producer，发送消息

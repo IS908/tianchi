@@ -3,21 +3,18 @@
  */
 package com.alibaba.middleware.race.jstorm;
 
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.middleware.race.model.OrderMessage;
-import com.alibaba.middleware.race.model.PaymentMessage;
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
-import clojure.lang.Obj;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.middleware.race.model.OrderMessage;
+import com.alibaba.middleware.race.model.PaymentMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * Created by v_zhengkun on 2016/7/3.

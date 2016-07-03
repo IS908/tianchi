@@ -1,7 +1,5 @@
 package com.alibaba.middleware.race.model;
 
-import java.security.Principal;
-
 /**
  * Created by kevin on 16-7-3.
  */

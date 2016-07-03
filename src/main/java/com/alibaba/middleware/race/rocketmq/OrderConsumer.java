@@ -1,8 +1,5 @@
 package com.alibaba.middleware.race.rocketmq;
 
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
@@ -13,6 +10,9 @@ import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently
 import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
+
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by kevin on 16-7-3.
