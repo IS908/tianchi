@@ -31,11 +31,9 @@ public class RaceTopology {
          * 优先级：局部 > 全局
          */
         Config conf = new Config();
-        String topologyName = RaceConfig.JstormTopologyName;
-
 
 //        LocalCluster cluster = new LocalCluster();
-//        cluster.submitTopology(topologyName, conf, builtTopology().createTopology());
+//        cluster.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology().createTopology());
 //        本地调试设定运行时间
 //        Utils.sleep(30000);
 //        cluster.killTopology(topologyName);

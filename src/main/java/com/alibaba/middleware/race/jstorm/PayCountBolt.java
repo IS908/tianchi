@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeoutException;
 
 public class PayCountBolt implements IRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(PayCountBolt.class);
