@@ -3,12 +3,12 @@ package com.alibaba.middleware.race.model;
 /**
  * Created by kevin on 16-7-3.
  */
-public class PaySum {
+public class SumMessage {
     private Long timestamp;
     private int platform;
     private Double total;
 
-    public PaySum(Long timestamp, int platform, Double total) {
+    public SumMessage(Long timestamp, int platform, Double total) {
         this.timestamp = timestamp;
         this.platform = platform;
         this.total = total;
@@ -40,7 +40,7 @@ public class PaySum {
 
     @Override
     public String toString() {
-        return "PaySum{" +
+        return "SumMessage{" +
                 "timestamp=" + timestamp +
                 ", platform=" + platform +
                 ", total=" + total +

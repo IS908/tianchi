@@ -9,27 +9,46 @@ public class RaceConfig implements Serializable {
 
     // TODO jstorm的拓扑流程中的个组件的ID统一在此处设置
     // ComponentID
-    public static final String ID_PAY_SOURCE = "paysource";//
-    public static final String ID_ORDER_SOURCE = "ordersource";
-    public static final String ID_SPLIT_PLATFORM = "platform";//
-    public static final String ID_PC_TIME_STAMP = "PCTimestamp";//
-    public static final String ID_WIRELESS_TIME_STAMP = "WirelessTimestamp";//
+    public static final String id_spout_source = "id_spout_source";//
+
+    public static final String id_order_tb = "id_order_tb";//
+    public static final String id_order_tm = "id_order_tm";//
+
+    public static final String Id_pay_pc = "PCTimestamp";//
+    public static final String id_pay_wireless = "WirelessTimestamp";//
     public static final String ID_PAY_RATIO = "payRatio";//
+    public static final String ID_ORDER_RATIO = "orderRatio";//
 
     // StreamID
+    public static final String STREAM_PLATFORM_TB = "stream_platform_tb";
+    public static final String STREAM_PLATFORM_TM = "stream_platform_tm";
+    public static final String STREAM_PLATFORM_PC = "stream_platform_pc";
+    public static final String STREAM_PLATFORM_WIRELESS = "stream_platform_wireless";
+
+    public static final String FIELD_TB_ORDER_DATA = "tb_message";
+    public static final String FIELD_TM_ORDER_DATA = "tm_message";
     public static final String ID_PAY_STREAM = "paystream";
     public static final String Stream_pay_pc = "stream_pc";
     public static final String Stream_pay_wireless = "stream_wireless";
-    public static final String Stream_count_pc = "streamCountPC";
+
+    ///////////////////////
+    public static final String ID_SPLIT_PLATFORM = "platform";//
+
+    ///////////////////////
 
     // FieldName
-    public static final String FIELD_PAY_DATA = "paydata";
-    public static final String FIELD_PAY_SUM = "paysum";
+    public static final String FIELD_SOURCE_DATA = "message";
+
+    public static final String field_order_tb = "field_order_tb";
+    public static final String field_order_tm = "field_order_tm";
+
     public static final String FIELD_PAY_PC = "pcfield";
     public static final String FIELD_PAY_WIRELESS = "wirelessfield";
-    public static final String FIELD_ACCOUNT = "account_sum";
-    public static final String FIELD_PLATFORM_PC = "pc";
-    public static final String FIELD_PLATFORM_WIRELESS = "wireless";
+
+    public static final String FIELD_PAY_DATA = "paydata";
+    public static final String field_pay_sum = "field_pay_sum";
+    public static final String field_order_sum = "field_order_sum";
+
 
 
     /* =================================================================

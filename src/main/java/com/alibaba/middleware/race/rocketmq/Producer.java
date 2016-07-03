@@ -26,7 +26,6 @@ public class Producer {
      * 所以选手可以利用这个程序生成数据，做线下的测试。
      *
      * @param args
-     *
      * @throws MQClientException
      * @throws InterruptedException
      */
@@ -37,7 +36,7 @@ public class Producer {
         producer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
         producer.start();
 
-        final String[] topics = new String[] {RaceConfig.MqTaobaoTradeTopic, RaceConfig.MqTmallTradeTopic};
+        final String[] topics = new String[]{RaceConfig.MqTaobaoTradeTopic, RaceConfig.MqTmallTradeTopic};
         final Semaphore semaphore = new Semaphore(0);
 
         while (true) {
@@ -54,7 +53,7 @@ public class Producer {
 
                     producer.send(msgToBroker, new SendCallback() {
                         public void onSuccess(SendResult sendResult) {
-                            //                            System.out.println(orderMessage);
+                            // System.out.println(orderMessage);
                             semaphore.release();
                         }
 
@@ -78,7 +77,7 @@ public class Producer {
                                     new Message(RaceConfig.MqPayTopic, RaceUtils.writeKryoObject(paymentMessage));
                             producer.send(messageToBroker, new SendCallback() {
                                 public void onSuccess(SendResult sendResult) {
-                                    //                                    System.out.println(paymentMessage);
+                                    // System.out.println(paymentMessage);
                                 }
 
                                 public void onException(Throwable throwable) {
@@ -103,7 +102,7 @@ public class Producer {
             semaphore.acquire(count);
 
             //用一个short标识生产者停止生产数据
-            byte[] zero = new byte[] {0, 0};
+            byte[] zero = new byte[]{0, 0};
             Message endMsgTB = new Message(RaceConfig.MqTaobaoTradeTopic, zero);
             Message endMsgTM = new Message(RaceConfig.MqTmallTradeTopic, zero);
             Message endMsgPay = new Message(RaceConfig.MqPayTopic, zero);

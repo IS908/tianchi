@@ -8,8 +8,8 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.model.PaySum;
 import com.alibaba.middleware.race.model.PaymentMessage;
+import com.alibaba.middleware.race.model.SumMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,13 +51,13 @@ public class PayCountBolt implements IRichBolt {
             WirelessMap.put(timestamp, message.getPayAmount() + total);
         }
         if (sum != null) {
-            this.collector.emit(new Values(new PaySum(timestamp, platform, sum)));
+            this.collector.emit(new Values(new SumMessage(timestamp, platform, sum)));
         }
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(RaceConfig.FIELD_ACCOUNT));
+        declarer.declare(new Fields(RaceConfig.field_pay_sum));
     }
 
     @Override

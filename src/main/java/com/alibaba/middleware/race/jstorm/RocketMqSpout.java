@@ -6,6 +6,7 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
@@ -67,7 +68,7 @@ public class RocketMqSpout implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("message"));
+        declarer.declare(new Fields(RaceConfig.FIELD_SOURCE_DATA));
     }
 
     @Override
@@ -85,15 +86,20 @@ public class RocketMqSpout implements IRichSpout, MessageListenerConcurrently {
                 continue;
             }
             String topic = msg.getTopic();
-            LOGGER.info("topic={}", topic);
+
             // 付款消息
             if (RaceConfig.MqPayTopic.equals(topic)) {
                 PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
                 collector.emit(new Values(paymentMessage));
+                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(paymentMessage));
             } else if (RaceConfig.MqTaobaoTradeTopic.equals(topic) || RaceConfig.MqTmallTradeTopic.equals(topic)) {
                 OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
                 collector.emit(new Values(orderMessage));
+                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(orderMessage));
+            } else {
+                LOGGER.info("topic={}, message=other", topic);
             }
+
         }
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }

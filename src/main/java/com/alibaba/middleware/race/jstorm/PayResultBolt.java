@@ -5,7 +5,7 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
-import com.alibaba.middleware.race.model.PaySum;
+import com.alibaba.middleware.race.model.SumMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by kevin on 16-6-26.
  */
-public class CountResultBolt implements IRichBolt {
+public class PayResultBolt implements IRichBolt {
     private static final long serialVersionUID = -1910650485341329191L;
-    private static Logger LOG = LoggerFactory.getLogger(CountResultBolt.class);
+    private static Logger LOG = LoggerFactory.getLogger(PayResultBolt.class);
 
     private ConcurrentHashMap<Long, Double> PCMap = null;
     private ConcurrentHashMap<Long, Double> WirelessMap = null;
@@ -32,8 +32,11 @@ public class CountResultBolt implements IRichBolt {
     @Override
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
-        PaySum message = (PaySum) obj;
+        SumMessage message = (SumMessage) obj;
         Long timestamp = message.getTimestamp();
+        /*
+        * TODO 此处的逻辑待完善
+        * */
         if (message.getPlatform() == 0) {
             Double pcAccount = PCMap.get(timestamp);
             if (pcAccount == null) {
@@ -61,7 +64,7 @@ public class CountResultBolt implements IRichBolt {
         Iterator<Map.Entry<Long, Double>> iteratorPC = PCMap.entrySet().iterator();
         while (iteratorPC.hasNext()) {
             Map.Entry<Long, Double> map = iteratorPC.next();
-            // TODO 执行写入tair操作// TODO
+            // TODO 执行写入tair操作
             LOG.info(">>> PC端：" + map.getKey() + "\t-->\t" + map.getValue());
         }
 

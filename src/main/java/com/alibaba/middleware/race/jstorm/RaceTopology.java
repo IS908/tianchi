@@ -57,32 +57,38 @@ public class RaceTopology {
     private static TopologyBuilder builtTopology() {
         int spout_Parallelism_hint = 1;
         int split_Parallelism_hint = 1;
-        int count_Parallelism_hint = 2;
+        int count_Parallelism_hint = 1;
         int result_Parallelism_hint = 1;
-
-        // 获取支付数据
-        RacePaymentMessageSpout paySource = new RacePaymentMessageSpout();
-        SplitStreamBolt splitBolt = new SplitStreamBolt();
 
         TopologyBuilder builder = new TopologyBuilder();
 
+        builder.setSpout(RaceConfig.id_spout_source, new RocketMqSpout(), spout_Parallelism_hint);
+
         //  从rocketMQ中拉取数据
-        /*builder.setSpout(RaceConfig.ID_ORDER_SOURCE, orderSource, spout_Parallelism_hint);*/
+        builder.setBolt(RaceConfig.ID_SPLIT_PLATFORM, new SplitStreamBolt(), split_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.id_spout_source, new Fields(RaceConfig.FIELD_SOURCE_DATA));
 
-        builder.setSpout(RaceConfig.ID_PAY_SOURCE, paySource, spout_Parallelism_hint);
+        // 淘宝/天猫 订单数据分析
+        builder.setBolt(RaceConfig.id_order_tb, new OrderCountBolt(), count_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_TB, new Fields(RaceConfig.field_order_tb));
 
-        builder.setBolt(RaceConfig.ID_SPLIT_PLATFORM, splitBolt, split_Parallelism_hint)
-                .fieldsGrouping(RaceConfig.ID_PAY_SOURCE, new Fields(RaceConfig.FIELD_PAY_DATA));
+        builder.setBolt(RaceConfig.id_order_tm, new OrderCountBolt(), count_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_TM, new Fields(RaceConfig.field_order_tm));
 
-        builder.setBolt(RaceConfig.ID_PC_TIME_STAMP, new PayCountBolt(), count_Parallelism_hint)
-                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.FIELD_PLATFORM_PC, new Fields(RaceConfig.FIELD_PAY_PC));
+        builder.setBolt(RaceConfig.ID_ORDER_RATIO, new OrderResultBolt(), count_Parallelism_hint)
+                .globalGrouping(RaceConfig.id_order_tb)
+                .globalGrouping(RaceConfig.id_order_tm);
 
-        builder.setBolt(RaceConfig.ID_WIRELESS_TIME_STAMP, new PayCountBolt(), count_Parallelism_hint)
-                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.FIELD_PLATFORM_WIRELESS, new Fields(RaceConfig.FIELD_PAY_WIRELESS));
+        // PC端/无线端 支付数据分析
+        builder.setBolt(RaceConfig.Id_pay_pc, new PayCountBolt(), count_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_PC, new Fields(RaceConfig.FIELD_PAY_PC));
 
-        builder.setBolt(RaceConfig.ID_PAY_RATIO, new CountResultBolt(), result_Parallelism_hint)
-                .globalGrouping(RaceConfig.ID_PC_TIME_STAMP)
-                .globalGrouping(RaceConfig.ID_WIRELESS_TIME_STAMP);
+        builder.setBolt(RaceConfig.id_pay_wireless, new PayCountBolt(), count_Parallelism_hint)
+                .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_WIRELESS, new Fields(RaceConfig.FIELD_PAY_WIRELESS));
+
+        builder.setBolt(RaceConfig.ID_PAY_RATIO, new PayResultBolt(), result_Parallelism_hint)
+                .globalGrouping(RaceConfig.Id_pay_pc)
+                .globalGrouping(RaceConfig.id_pay_wireless);
         return builder;
     }
 }
