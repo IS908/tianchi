@@ -77,7 +77,7 @@ public class OrderCountBolt implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(RaceConfig.field_order_sum));
+        declarer.declare(new Fields(RaceConfig.FIELD_ORDER_SUM));
     }
 
     @Override

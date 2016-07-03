@@ -53,8 +53,8 @@ public class SplitStreamBolt implements IRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declareStream(RaceConfig.STREAM_PLATFORM_TB, new Fields(RaceConfig.field_order_tb));
-		declarer.declareStream(RaceConfig.STREAM_PLATFORM_TM, new Fields(RaceConfig.field_order_tm));
+		declarer.declareStream(RaceConfig.STREAM_PLATFORM_TB, new Fields(RaceConfig.FIELD_ORDER_TB));
+		declarer.declareStream(RaceConfig.STREAM_PLATFORM_TM, new Fields(RaceConfig.FIELD_ORDER_TM));
 		declarer.declareStream(RaceConfig.STREAM_PLATFORM_PC, new Fields(RaceConfig.FIELD_PAY_PC));
 		declarer.declareStream(RaceConfig.STREAM_PLATFORM_WIRELESS, new Fields(RaceConfig.FIELD_PAY_WIRELESS));
 
