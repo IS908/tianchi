@@ -14,7 +14,6 @@ import com.alibaba.rocketmq.client.exception.MQClientException;
 import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
 import com.alibaba.rocketmq.common.message.MessageExt;
 
-
 /**
  * PaymentConsumer，订阅消息
  */
@@ -24,7 +23,8 @@ import com.alibaba.rocketmq.common.message.MessageExt;
  */
 public class PaymentConsumer {
 
-    public static DefaultMQPushConsumer getConsumer(String mqTopic, final BlockingQueue<PaymentMessage> queue) throws MQClientException {
+    public static DefaultMQPushConsumer getConsumer(String mqTopic, final BlockingQueue<PaymentMessage> queue)
+            throws MQClientException {
         DefaultMQPushConsumer pay_consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
         /**
          * 设置Consumer第一次启动是从队列头部开始消费还是队列尾部开始消费<br>
@@ -33,16 +33,15 @@ public class PaymentConsumer {
         pay_consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        pay_consumer.setNamesrvAddr(RaceConfig.mqIP);
-        
+        pay_consumer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
+
         pay_consumer.subscribe(mqTopic, "*");
         pay_consumer.registerMessageListener(new MessageListenerConcurrently() {
 
             @Override
-            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
-                                                            ConsumeConcurrentlyContext context) {
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                 for (MessageExt msg : msgs) {
-                    byte [] body = msg.getBody();
+                    byte[] body = msg.getBody();
                     if (body.length == 2 && body[0] == 0 && body[1] == 0) {
                         //Info: 生产者停止生成数据, 并不意味着马上结束
                         System.out.println("Got the end signal");
@@ -69,18 +68,17 @@ public class PaymentConsumer {
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        consumer.setNamesrvAddr(RaceConfig.mqIP);
+        consumer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
 
         consumer.subscribe(RaceConfig.MqPayTopic, "*");
 
         consumer.registerMessageListener(new MessageListenerConcurrently() {
 
             @Override
-            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
-                                                            ConsumeConcurrentlyContext context) {
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                 for (MessageExt msg : msgs) {
 
-                    byte [] body = msg.getBody();
+                    byte[] body = msg.getBody();
                     if (body.length == 2 && body[0] == 0 && body[1] == 0) {
                         //Info: 生产者停止生成数据, 并不意味着马上结束
                         System.out.println("Got the end signal");

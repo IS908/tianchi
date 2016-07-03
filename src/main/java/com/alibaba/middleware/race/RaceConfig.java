@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class RaceConfig implements Serializable {
 
     // TODO rocketMQ的nameserver地址及端口统一在此配置
-    public static final String mqIP = "192.168.1.10:9876";
+    public static final String MQ_NAME_SERVER = "192.168.1.10:9876";
 
     // TODO jstorm的拓扑流程中的个组件的ID统一在此处设置
     // ComponentID

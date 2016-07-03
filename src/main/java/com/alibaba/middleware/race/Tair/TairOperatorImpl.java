@@ -21,8 +21,7 @@ public class TairOperatorImpl {
 
     public TairOperatorImpl(String masterConfigServer, String slaveConfigServer, String groupName, int namespace) {
         tairManager = new DefaultTairManager();
-        List<String> configServerList = Arrays.asList(masterConfigServer, slaveConfigServer);
-        tairManager.setConfigServerList(configServerList);
+        tairManager.setConfigServerList(Arrays.asList(masterConfigServer, slaveConfigServer));
         tairManager.setGroupName(groupName);
         tairManager.init();
 
