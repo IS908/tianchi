@@ -53,6 +53,7 @@ public class OrderCountTBBolt implements IRichBolt {
         if (sum != null) {
             collector.emit(new Values(new SumMessage(timestamp, platform, sum)));
         }
+        this.collector.ack(tuple);
     }
 
     @Override

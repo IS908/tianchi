@@ -20,12 +20,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PayResultBolt implements IRichBolt {
     private static final long serialVersionUID = -1910650485341329191L;
     private static Logger LOG = LoggerFactory.getLogger(PayResultBolt.class);
-
+    private OutputCollector collector;
     private ConcurrentHashMap<Long, Double> PCMap = null;
     private ConcurrentHashMap<Long, Double> WirelessMap = null;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+        this.collector = collector;
         this.PCMap = new ConcurrentHashMap<>();
         this.WirelessMap = new ConcurrentHashMap<>();
     }
@@ -57,10 +58,11 @@ public class PayResultBolt implements IRichBolt {
         }
         // 执行写tair操作
         if (pcSum != null && wirelessSum != null) {
-            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + timestamp, wirelessSum / pcSum);
+//            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + timestamp, wirelessSum / pcSum);
             PCMap.remove(timestamp - 180L);
             WirelessMap.remove(timestamp - 180L);
         }
+        this.collector.ack(tuple);
         LOG.info("message={}", message);
     }
 

@@ -48,6 +48,7 @@ public class PayCountWirelessBolt implements IRichBolt {
             }
         }
         wirelessMap.put(timestamp, message.getPayAmount() + total);
+        this.collector.ack(tuple);
     }
 
     @Override

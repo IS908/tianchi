@@ -22,7 +22,7 @@ import java.util.Map;
 public class SplitStreamBolt implements IRichBolt {
 	private static Logger LOG = LoggerFactory.getLogger(SplitStreamBolt.class);
 
-	OutputCollector collector;
+	private OutputCollector collector;
 
 	@Override
 	public void execute(Tuple tuple) {
@@ -48,7 +48,7 @@ public class SplitStreamBolt implements IRichBolt {
 				collector.emit(RaceConfig.STREAM_PLATFORM_WIRELESS, new Values(message));
 			}
 		}
-
+		this.collector.ack(tuple);
 	}
 
 	@Override

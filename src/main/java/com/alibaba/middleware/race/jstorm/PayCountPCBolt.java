@@ -48,6 +48,7 @@ public class PayCountPCBolt implements IRichBolt {
             }
         }
         pcMap.put(timestamp, message.getPayAmount() + total);
+        this.collector.ack(tuple);
     }
 
     @Override

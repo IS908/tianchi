@@ -21,12 +21,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class OrderResultBolt implements IRichBolt {
     private static final long serialVersionUID = -837272193660107470L;
     private static Logger LOG = LoggerFactory.getLogger(OrderResultBolt.class);
-
+    private OutputCollector collector;
     private ConcurrentHashMap<Long, Double> tbMap = null;
     private ConcurrentHashMap<Long, Double> tmMap = null;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+        this.collector = collector;
         this.tbMap = new ConcurrentHashMap<>();
         this.tmMap = new ConcurrentHashMap<>();
     }
@@ -40,6 +41,7 @@ public class OrderResultBolt implements IRichBolt {
         } else {
             this.opRresult(RaceConfig.prex_tmall, message, tmMap);
         }
+        this.collector.ack(tuple);
         LOG.info("message={}", message);
     }
 
@@ -49,7 +51,7 @@ public class OrderResultBolt implements IRichBolt {
         if (account == null) {
             account = 0.0d;
             Double res = map.get(timestamp - 60L);
-            TairOperatorImpl.getInstance().write(key + timestamp, res);
+//            TairOperatorImpl.getInstance().write(key + timestamp, res);
             map.remove(timestamp - 180L);
         }
         account += message.getTotal();

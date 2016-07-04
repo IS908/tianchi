@@ -52,7 +52,7 @@ public class RaceTopology {
     // 正式逻辑在这里组织
     private static TopologyBuilder builtTopology() {
         int spout_Parallelism_hint = 1;
-        int split_Parallelism_hint = 2;
+        int split_Parallelism_hint = 1;
         int count_Parallelism_hint = 1;
         int result_Parallelism_hint = 1;
 
