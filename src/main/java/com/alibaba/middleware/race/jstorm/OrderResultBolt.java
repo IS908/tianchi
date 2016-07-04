@@ -51,7 +51,7 @@ public class OrderResultBolt implements IRichBolt {
         if (account == null) {
             account = 0.0d;
             Double res = map.get(timestamp - 60L);
-//            TairOperatorImpl.getInstance().write(key + timestamp, res);
+            TairOperatorImpl.getInstance().write(key + timestamp, res);
             map.remove(timestamp - 180L);
         }
         account += message.getTotal();

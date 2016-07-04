@@ -58,7 +58,7 @@ public class PayResultBolt implements IRichBolt {
         }
         // 执行写tair操作
         if (pcSum != null && wirelessSum != null) {
-//            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + timestamp, wirelessSum / pcSum);
+            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + timestamp, wirelessSum / pcSum);
             PCMap.remove(timestamp - 180L);
             WirelessMap.remove(timestamp - 180L);
         }
