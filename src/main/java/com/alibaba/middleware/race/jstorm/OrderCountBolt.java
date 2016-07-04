@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by kevin on 16-7-3.
  */
+@Deprecated
 public class OrderCountBolt implements IRichBolt {
     private static final long serialVersionUID = 7124715562791604109L;
     private static Logger LOG = LoggerFactory.getLogger(OrderCountBolt.class);

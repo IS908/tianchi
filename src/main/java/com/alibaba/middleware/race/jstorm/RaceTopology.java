@@ -1,6 +1,7 @@
 package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
+import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
@@ -51,7 +52,7 @@ public class RaceTopology {
     // 正式逻辑在这里组织
     private static TopologyBuilder builtTopology() {
         int spout_Parallelism_hint = 1;
-        int split_Parallelism_hint = 1;
+        int split_Parallelism_hint = 2;
         int count_Parallelism_hint = 1;
         int result_Parallelism_hint = 1;
 
@@ -64,21 +65,21 @@ public class RaceTopology {
                 .fieldsGrouping(RaceConfig.ID_SPOUT_SOURCE, new Fields(RaceConfig.FIELD_SOURCE_DATA));
 
         // 淘宝/天猫 订单数据分析
-        builder.setBolt(RaceConfig.ID_ORDER_TB, new OrderCountBolt(), count_Parallelism_hint)
+        builder.setBolt(RaceConfig.ID_ORDER_TB, new OrderCountTBBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_TB, new Fields(RaceConfig.FIELD_ORDER_TB));
 
-        builder.setBolt(RaceConfig.ID_ORDER_TM, new OrderCountBolt(), count_Parallelism_hint)
+        builder.setBolt(RaceConfig.ID_ORDER_TM, new OrderCountTMBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_TM, new Fields(RaceConfig.FIELD_ORDER_TM));
 
-        builder.setBolt(RaceConfig.ID_ORDER_RATIO, new OrderResultBolt(), count_Parallelism_hint)
+        builder.setBolt(RaceConfig.ID_ORDER_RATIO, new OrderResultBolt(), result_Parallelism_hint)
                 .globalGrouping(RaceConfig.ID_ORDER_TB)
                 .globalGrouping(RaceConfig.ID_ORDER_TM);
 
         // PC端/无线端 支付数据分析
-        builder.setBolt(RaceConfig.ID_PAY_PC, new PayCountBolt(), count_Parallelism_hint)
+        builder.setBolt(RaceConfig.ID_PAY_PC, new PayCountPCBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_PC, new Fields(RaceConfig.FIELD_PAY_PC));
 
-        builder.setBolt(RaceConfig.ID_PAY_WIRELESS, new PayCountBolt(), count_Parallelism_hint)
+        builder.setBolt(RaceConfig.ID_PAY_WIRELESS, new PayCountWirelessBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_WIRELESS, new Fields(RaceConfig.FIELD_PAY_WIRELESS));
 
         builder.setBolt(RaceConfig.ID_PAY_RATIO, new PayResultBolt(), result_Parallelism_hint)
