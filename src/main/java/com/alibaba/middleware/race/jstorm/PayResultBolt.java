@@ -45,22 +45,24 @@ public class PayResultBolt implements IRichBolt {
             Double pcAccount = PCMap.get(timestamp);
             if (pcAccount == null) {
                 pcAccount = 0.0d;
+                pcSum = PCMap.get(timestamp - 60L);
             }
             PCMap.put(timestamp, pcAccount + message.getTotal());
-            pcSum = PCMap.get(timestamp - 60L);
         } else {
             Double wirelessAccount = WirelessMap.get(timestamp);
             if (wirelessAccount == null) {
                 wirelessAccount = 0.0d;
+                wirelessSum = WirelessMap.get(timestamp - 60L);
             }
             WirelessMap.put(timestamp, wirelessAccount + message.getTotal());
-            wirelessSum = WirelessMap.get(timestamp - 60L);
         }
         // 执行写tair操作
         if (pcSum != null && wirelessSum != null) {
-            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + timestamp, wirelessSum / pcSum);
-            PCMap.remove(timestamp - 180L);
-            WirelessMap.remove(timestamp - 180L);
+            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + (timestamp - 60L), wirelessSum / pcSum);
+            PCMap.put(timestamp, pcSum + PCMap.get(timestamp));
+            WirelessMap.put(timestamp, wirelessSum + WirelessMap.get(timestamp));
+            PCMap.remove(timestamp - 120L);
+            WirelessMap.remove(timestamp - 120L);
         }
         this.collector.ack(tuple);
         LOG.info("message={}", message);
