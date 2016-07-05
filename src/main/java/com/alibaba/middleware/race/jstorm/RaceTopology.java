@@ -71,7 +71,7 @@ public class RaceTopology {
         builder.setBolt(RaceConfig.ID_ORDER_TM, new OrderCountTMBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_TM, new Fields(RaceConfig.FIELD_ORDER_TM));
 
-        builder.setBolt(RaceConfig.ID_ORDER_RATIO, new OrderResultBolt(), result_Parallelism_hint)
+        builder.setBolt(RaceConfig.ID_ORDER_SUM, new OrderResultBolt(), result_Parallelism_hint)
                 .globalGrouping(RaceConfig.ID_ORDER_TB)
                 .globalGrouping(RaceConfig.ID_ORDER_TM);
 
