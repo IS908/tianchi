@@ -22,7 +22,7 @@ public class Consumer {
     static {
         consumer = new DefaultMQPushConsumer(RaceConfig.MetaConsumerGroup);
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-        consumer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
+//        consumer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
         try {
             consumer.subscribe(RaceConfig.MqTmallTradeTopic, SubscriptionData.SUB_ALL);
             consumer.subscribe(RaceConfig.MqTaobaoTradeTopic, SubscriptionData.SUB_ALL);
