@@ -33,7 +33,7 @@ public class Producer {
         DefaultMQProducer producer = new DefaultMQProducer(RaceConfig.MetaConsumerGroup);
 
         // 在本地搭建好broker后,记得指定nameServer的地址
-        producer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
+        producer.setNamesrvAddr("127.0.0.1:9876");
         producer.start();
 
         final String[] topics = new String[]{RaceConfig.MqTaobaoTradeTopic, RaceConfig.MqTmallTradeTopic};

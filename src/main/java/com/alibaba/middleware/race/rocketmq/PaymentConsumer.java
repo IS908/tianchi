@@ -33,7 +33,7 @@ public class PaymentConsumer {
         pay_consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        pay_consumer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
+        pay_consumer.setNamesrvAddr("127.0.0.1:9876");
 
         pay_consumer.subscribe(mqTopic, "*");
         pay_consumer.registerMessageListener(new MessageListenerConcurrently() {
@@ -68,7 +68,7 @@ public class PaymentConsumer {
         consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        consumer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
+        consumer.setNamesrvAddr("127.0.0.1:9876");
 
         consumer.subscribe(RaceConfig.MqPayTopic, "*");
 

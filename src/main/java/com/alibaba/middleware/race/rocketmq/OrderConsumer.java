@@ -37,7 +37,7 @@ public class OrderConsumer {
         tm_consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
 
         // TODO 在本地搭建好broker后,记得指定nameServer的地址
-        tm_consumer.setNamesrvAddr(RaceConfig.MQ_NAME_SERVER);
+        tm_consumer.setNamesrvAddr("127.0.0.1:9876");
 
         tm_consumer.subscribe(topic, "*");
         tm_consumer.registerMessageListener(new MessageListenerConcurrently() {
