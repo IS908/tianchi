@@ -37,17 +37,22 @@ public class PayCountPCBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
         PaymentMessage message = (PaymentMessage) obj;
-        Long timestamp = message.getCreateTime() / (60 * 1000) * 60;
+        long timestamp = message.getCreateTime() / (60 * 1000) * 60;
+        long emit_timestamp = timestamp - 120L;
+        long remove_timestamp = timestamp - 240L;
+
         Double total = pcMap.get(timestamp);
         if (total == null) {
             total = 0.0;
-            Double sum = pcMap.get(timestamp - 120L);
+            Double sum = pcMap.get(emit_timestamp);
             if (sum != null) {
-                this.collector.emit(new Values(new SumMessage(timestamp, platform, sum)));
-                pcMap.remove(timestamp - 180L);
+                this.collector.emit(new Values(new SumMessage(emit_timestamp, platform, sum)));
             }
+//            pcMap.remove(remove_timestamp);
         }
-        pcMap.put(timestamp, message.getPayAmount() + total);
+        total += message.getPayAmount();
+        pcMap.put(timestamp, total);
+
         this.collector.ack(tuple);
     }
 

@@ -35,37 +35,42 @@ public class PayResultBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
         SumMessage message = (SumMessage) obj;
-        Long timestamp = message.getTimestamp();
+        long timestamp = message.getTimestamp();
+        long calculate_timestamp = timestamp - 60L;
+        long remove_timestamp = timestamp - 240L;
+
         Double pcSum = null;
         Double wirelessSum = null;
-        /*
-        * 此处的逻辑待完善
-        * */
+
         if (message.getPlatform() == 0) {
             Double pcAccount = PCMap.get(timestamp);
             if (pcAccount == null) {
                 pcAccount = 0.0d;
-                pcSum = PCMap.get(timestamp - 60L);
+                pcSum = PCMap.get(calculate_timestamp);
             }
             PCMap.put(timestamp, pcAccount + message.getTotal());
         } else {
             Double wirelessAccount = WirelessMap.get(timestamp);
             if (wirelessAccount == null) {
                 wirelessAccount = 0.0d;
-                wirelessSum = WirelessMap.get(timestamp - 60L);
+                wirelessSum = WirelessMap.get(calculate_timestamp);
             }
             WirelessMap.put(timestamp, wirelessAccount + message.getTotal());
         }
         // 执行写tair操作
         if (pcSum != null && wirelessSum != null) {
-            TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + (timestamp - 60L), wirelessSum / pcSum);
-            PCMap.put(timestamp, pcSum + PCMap.get(timestamp));
+            TairOperatorImpl.getInstance().write(
+                    RaceConfig.prex_ratio + calculate_timestamp,
+                    wirelessSum / pcSum);
+
             WirelessMap.put(timestamp, wirelessSum + WirelessMap.get(timestamp));
-            PCMap.remove(timestamp - 120L);
-            WirelessMap.remove(timestamp - 120L);
+            PCMap.put(timestamp, pcSum + PCMap.get(timestamp));
+
+//            PCMap.remove(remove_timestamp);
+//            WirelessMap.remove(remove_timestamp);
         }
+
         this.collector.ack(tuple);
-        LOG.info("message={}", message);
     }
 
     @Override

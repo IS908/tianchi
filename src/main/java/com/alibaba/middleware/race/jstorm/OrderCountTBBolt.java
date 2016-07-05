@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class OrderCountTBBolt implements IRichBolt {
     private static final long serialVersionUID = -5501370330879354521L;
-    private static Logger LOG = LoggerFactory.getLogger(OrderCountBolt.class);
+    private static Logger LOG = LoggerFactory.getLogger(OrderCountTBBolt.class);
     OutputCollector collector;
     private ConcurrentHashMap<Long, Double> tbMap = null;
     private final int platform = 0;
@@ -37,22 +37,24 @@ public class OrderCountTBBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
         OrderMessage message = (OrderMessage) obj;
-//        LOG.info("ordermessage={}", message);
-        Long timestamp = message.getCreateTime() / (60 * 1000) * 60;
-        Double sum = null;
+        long current_timestamp = message.getCreateTime() / (60 * 1000) * 60;
+        long send_timestamp = current_timestamp - 120L;
+        long remove_timestamp = current_timestamp - 240L;
+
         // 淘宝平台订单
-        Double total = tbMap.get(timestamp);
+        Double total = tbMap.get(current_timestamp);
         if (total == null) {
             total = 0.0;
-            sum = tbMap.get(timestamp - 120L);
-            tbMap.remove(timestamp - 180L);
+            Double sum = tbMap.get(send_timestamp);
+            if (sum != null) {
+                collector.emit(new Values(new SumMessage(send_timestamp, platform, sum)));
+            }
+//            tbMap.remove(remove_timestamp);
         }
-        total += message.getTotalPrice();
-        tbMap.put(timestamp, total);
 
-        if (sum != null) {
-            collector.emit(new Values(new SumMessage(timestamp, platform, sum)));
-        }
+        total += message.getTotalPrice();
+        tbMap.put(current_timestamp, total);
+
         this.collector.ack(tuple);
     }
 

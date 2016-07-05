@@ -46,16 +46,21 @@ public class OrderResultBolt implements IRichBolt {
     }
 
     private void opRresult(String key, SumMessage message, ConcurrentHashMap<Long, Double> map) {
-        Long timestamp = message.getTimestamp();
-        Double account = map.get(timestamp);
+        long current_timestamp = message.getTimestamp();
+        long write_timestamp = current_timestamp - 60L;
+        long remove_timestamp = current_timestamp - 240L;
+
+        Double account = map.get(current_timestamp);
         if (account == null) {
             account = 0.0d;
-            Double res = map.get(timestamp - 60L);
-            TairOperatorImpl.getInstance().write(key + timestamp, res);
-            map.remove(timestamp - 180L);
+            Double res = map.get(write_timestamp);
+            if (res != null) {
+                TairOperatorImpl.getInstance().write(key + write_timestamp, res);
+            }
+//            map.remove(remove_timestamp);
         }
         account += message.getTotal();
-        map.put(timestamp, account);
+        map.put(current_timestamp, account);
     }
 
     @Override

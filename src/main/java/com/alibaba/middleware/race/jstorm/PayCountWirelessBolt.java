@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PayCountWirelessBolt implements IRichBolt {
     private static final long serialVersionUID = 8183236198457968724L;
-    private static Logger LOG = LoggerFactory.getLogger(PayCountBolt.class);
+    private static Logger LOG = LoggerFactory.getLogger(PayCountWirelessBolt.class);
     OutputCollector collector;
     private ConcurrentHashMap<Long, Double> wirelessMap = null;
     private final int platform = 1;
@@ -37,17 +37,22 @@ public class PayCountWirelessBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
         PaymentMessage message = (PaymentMessage) obj;
-        Long timestamp = message.getCreateTime() / (60 * 1000) * 60;
-        Double total = wirelessMap.get(timestamp);
+        long current_timestamp = message.getCreateTime() / (60 * 1000) * 60;
+        long emit_timestamp = current_timestamp - 120L;
+        long remove_timestamp = current_timestamp - 240L;
+
+        Double total = wirelessMap.get(current_timestamp);
         if (total == null) {
             total = 0.0;
-            Double sum = wirelessMap.get(timestamp - 120L);
+            Double sum = wirelessMap.get(emit_timestamp);
             if (sum != null) {
-                this.collector.emit(new Values(new SumMessage(timestamp, platform, sum)));
-                wirelessMap.remove(timestamp - 180L);
+                this.collector.emit(new Values(new SumMessage(emit_timestamp, platform, sum)));
             }
+//            wirelessMap.remove(remove_timestamp);
         }
-        wirelessMap.put(timestamp, message.getPayAmount() + total);
+        total += message.getPayAmount();
+        wirelessMap.put(current_timestamp, total);
+
         this.collector.ack(tuple);
     }
 
