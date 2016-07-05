@@ -25,7 +25,7 @@ public class Consumer {
 
         // TODO 提交测试前注释掉namesrvaddr配置，阿里会自己指定地址及端口
 //        consumer.setNamesrvAddr("127.0.0.1:9876");
-        consumer.setNamesrvAddr("192.168.1.10:9876");
+//        consumer.setNamesrvAddr("192.168.1.10:9876");
 
         try {
             consumer.subscribe(RaceConfig.MqTmallTradeTopic, SubscriptionData.SUB_ALL);
