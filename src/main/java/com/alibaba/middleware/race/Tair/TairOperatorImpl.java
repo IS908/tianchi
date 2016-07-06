@@ -57,7 +57,7 @@ public class TairOperatorImpl {
         //假设这是付款时间
         Long millisTime = System.currentTimeMillis();
         //由于整分时间戳是10位数，所以需要转换成整分时间戳
-        Long minuteTime = (millisTime / 1000 / 60) * 60;
+        Long minuteTime = (millisTime / (60 * 1000)) * 60;
         //假设这一分钟的交易额是100;
         Double money = 100.0;
         //写入tair

@@ -59,9 +59,11 @@ public class PayResultBolt implements IRichBolt {
         }
         // 执行写tair操作
         if (pcSum != null && wirelessSum != null) {
+            String res = String.format("%.2f", wirelessSum / pcSum);
             TairOperatorImpl.getInstance().write(
                     RaceConfig.prex_ratio + calculate_timestamp,
-                    wirelessSum / pcSum);
+                    res);
+            LOG.error("ratio {}:{}", calculate_timestamp, res);
 
             WirelessMap.put(timestamp, wirelessSum + WirelessMap.get(timestamp));
             PCMap.put(timestamp, pcSum + PCMap.get(timestamp));

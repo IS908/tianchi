@@ -37,7 +37,7 @@ public class OrderCountTMBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
         OrderMessage message = (OrderMessage) obj;
-        long current_timestamp = message.getCreateTime() / (60 * 1000) * 60;
+        long current_timestamp = (message.getCreateTime() / (60 * 1000)) * 60;
         long send_timestamp = current_timestamp - 120L;
         long remove_timestamp = current_timestamp - 240L;
 

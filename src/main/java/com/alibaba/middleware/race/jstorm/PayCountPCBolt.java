@@ -37,7 +37,7 @@ public class PayCountPCBolt implements IRichBolt {
     public void execute(Tuple tuple) {
         Object obj = tuple.getValue(0);
         PaymentMessage message = (PaymentMessage) obj;
-        long timestamp = message.getCreateTime() / (60 * 1000) * 60;
+        long timestamp = (message.getCreateTime() / (60 * 1000)) * 60;
         long emit_timestamp = timestamp - 120L;
         long remove_timestamp = timestamp - 240L;
 
