@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
 public class Producer {
 
     private static Random rand = new Random();
-    private static int count = 100;
+    private static int count = 10000;
 
     /**
      * 这是一个模拟堆积消息的程序，生成的消息模型和我们比赛的消息模型是一样的，
@@ -33,7 +33,8 @@ public class Producer {
         DefaultMQProducer producer = new DefaultMQProducer(RaceConfig.MetaConsumerGroup);
 
         // 在本地搭建好broker后,记得指定nameServer的地址
-        producer.setNamesrvAddr("127.0.0.1:9876");
+//        producer.setNamesrvAddr("127.0.0.1:9876");
+        producer.setNamesrvAddr("192.168.1.10:9876");
         producer.start();
 
         final String[] topics = new String[]{RaceConfig.MqTaobaoTradeTopic, RaceConfig.MqTmallTradeTopic};
@@ -114,7 +115,7 @@ public class Producer {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Thread.sleep(30000);
+            Thread.sleep(1000);
         }
 
         //        producer.shutdown();

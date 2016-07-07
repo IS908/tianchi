@@ -7,6 +7,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceConstant;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
@@ -28,14 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpoutRocketMq.class);
-    private ConcurrentHashMap<UUID, Values> pending;
 
     private SpoutOutputCollector collector;
 
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
-        this.pending = new ConcurrentHashMap<>();
         Consumer.registerListener(this);
     }
 
@@ -61,17 +60,15 @@ public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public void ack(Object msgId) {
-        this.pending.remove(msgId);
     }
 
     @Override
     public void fail(Object msgId) {
-        this.collector.emit(this.pending.get(msgId), msgId);
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(RaceConfig.FIELD_SOURCE_DATA));
+        declarer.declare(new Fields(RaceConstant.FIELD_SOURCE_DATA));
     }
 
     @Override
@@ -82,11 +79,11 @@ public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
         for (MessageExt msg : msgs) {
-            UUID uuid = UUID.randomUUID();
             byte[] body = msg.getBody();
             if (body.length == 2 && body[0] == 0 && body[1] == 0) {
                 //Info: 生产者停止生成数据, 并不意味着马上结束
-                System.out.println("Got the end signal");
+                collector.emit(new Values("stop"));
+                LOGGER.info("got the end signal!");
                 continue;
             }
             String topic = msg.getTopic();
@@ -94,16 +91,10 @@ public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
             // 付款消息
             if (RaceConfig.MqPayTopic.equals(topic)) {
                 PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
-                Values values = new Values(paymentMessage);
-                collector.emit(values, uuid);
-                this.pending.put(uuid, values);
-//                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(paymentMessage));
+                collector.emit(new Values(paymentMessage));
             } else if (RaceConfig.MqTaobaoTradeTopic.equals(topic) || RaceConfig.MqTmallTradeTopic.equals(topic)) {
                 OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-                Values values = new Values(orderMessage);
-                collector.emit(values, uuid);
-                this.pending.put(uuid, values);
-//                LOGGER.info("topic={}, message={}", topic, JSON.toJSONString(orderMessage));
+                collector.emit(new Values(orderMessage));
             }
         }
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;

@@ -2,7 +2,8 @@ package com.alibaba.middleware.race.jstorm;
 
 import java.util.Map;
 
-import com.alibaba.middleware.race.jstorm.common.RaceTopologyDef;
+import com.alibaba.middleware.race.RaceConstant;
+import com.sun.org.apache.xpath.internal.operations.Or;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,35 +34,37 @@ public class BoltSplitStream implements IRichBolt {
 		if (obj instanceof OrderMessage) {
 			OrderMessage message = (OrderMessage) obj;
 			// 按平台（天猫/淘宝）划分支付消息数据流
-			if (message.getSalerId().contains("tb_saler")) {
-				// 淘宝平台订单数据
-				collector.emit(RaceConfig.STREAM_ORDER_PLATFORM,
-						new Values(message.getOrderId(), "tb", message.getTotalPrice()));
-			} else if (message.getSalerId().contains("tm_saler")) {
-				// 天猫平台订单数据
-				collector.emit(RaceConfig.STREAM_ORDER_PLATFORM,
-						new Values(message.getOrderId(), "tm", message.getTotalPrice()));
-			}
+//			if (message.getSalerId().contains("tb_saler")) {
+//				// 淘宝平台订单数据
+//				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
+//						new Values(message.getOrderId(), "tb", message.getTotalPrice()));
+//			} else if (message.getSalerId().contains("tm_saler")) {
+//				// 天猫平台订单数据
+//				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
+//						new Values(message.getOrderId(), "tm", message.getTotalPrice()));
+//			}
+//			LOG.info("### orderMessage: {}", message);
 		} else if (obj instanceof PaymentMessage) {
 			PaymentMessage message = (PaymentMessage) obj;
-			collector.emit(RaceConfig.STREAM_PAY_PLATFORM,
+			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,
 					// values[ 订单ID, 创建时间, 支付金额， 支付平台(无线/PC)]
-					new Values(message.getOrderId(), (message.getCreateTime()/(60 * 1000)) * 60, message.getPayAmount(), message.getPayPlatform()));
+					new Values(message.getOrderId(), message.getPayPlatform(), (message.getCreateTime()/(60 * 1000)) * 60, message.getPayAmount()));
+		} else {
+			LOG.info("### got the end signal!!!");
 		}
-		this.collector.ack(tuple);
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		// 支付：订单ID，分钟时间戳，支付金额，支付平台
-		declarer.declareStream(RaceConfig.STREAM_PAY_PLATFORM,
-				new Fields(RaceTopologyDef.payId, RaceTopologyDef.payTime,
-						RaceTopologyDef.payAmount, RaceTopologyDef.payPlatform));
+		declarer.declareStream(RaceConstant.STREAM_PAY_PLATFORM,
+				new Fields(RaceConstant.payId, RaceConstant.payPlatform,
+						RaceConstant.payTime, RaceConstant.payAmount));
 
 		// 订单：订单ID，平台，价格
-		declarer.declareStream(RaceConfig.STREAM_ORDER_PLATFORM,
-				new Fields(RaceTopologyDef.orderId,
-						RaceTopologyDef.orderPlatform, RaceTopologyDef.orderPrice));
+//		declarer.declareStream(RaceConstant.STREAM_ORDER_PLATFORM,
+//				new Fields(RaceConstant.orderId,
+//						RaceConstant.orderPlatform, RaceConstant.orderPrice));
 	}
 
 	@Override

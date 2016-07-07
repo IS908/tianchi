@@ -8,6 +8,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceConstant;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.SumMessage;
 import org.slf4j.Logger;
@@ -89,7 +90,7 @@ public class BoltPairCount implements IRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(RaceConfig.FIELD_ORDER_SUM));
+        declarer.declare(new Fields(RaceConstant.FIELD_ORDER_SUM));
     }
 
     @Override
