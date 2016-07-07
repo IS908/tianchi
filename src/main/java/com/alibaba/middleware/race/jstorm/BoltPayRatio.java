@@ -17,9 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by kevin on 16-6-26.
  */
-public class PayResultBolt implements IRichBolt {
+public class BoltPayRatio implements IRichBolt {
     private static final long serialVersionUID = -1910650485341329191L;
-    private static Logger LOG = LoggerFactory.getLogger(PayResultBolt.class);
+    private static Logger LOG = LoggerFactory.getLogger(BoltPayRatio.class);
     private OutputCollector collector;
     private ConcurrentHashMap<Long, Double> PCMap = null;
     private ConcurrentHashMap<Long, Double> WirelessMap = null;

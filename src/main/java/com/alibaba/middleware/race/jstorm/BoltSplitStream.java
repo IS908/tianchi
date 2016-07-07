@@ -2,6 +2,7 @@ package com.alibaba.middleware.race.jstorm;
 
 import java.util.Map;
 
+import com.alibaba.middleware.race.jstorm.common.RaceTopologyDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +22,8 @@ import backtype.storm.tuple.Values;
 /**
  * 将拉取到的数据分流到各个处理下游
  */
-public class SplitStreamBolt implements IRichBolt {
-	private static Logger LOG = LoggerFactory.getLogger(SplitStreamBolt.class);
+public class BoltSplitStream implements IRichBolt {
+	private static Logger LOG = LoggerFactory.getLogger(BoltSplitStream.class);
 
 	private OutputCollector collector;
 
@@ -54,11 +55,13 @@ public class SplitStreamBolt implements IRichBolt {
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		// 支付：订单ID，分钟时间戳，支付金额，支付平台
 		declarer.declareStream(RaceConfig.STREAM_PAY_PLATFORM,
-				new Fields("Id", "timestamp", "payAmount", "platform"));
+				new Fields(RaceTopologyDef.payId, RaceTopologyDef.payTime,
+						RaceTopologyDef.payAmount, RaceTopologyDef.payPlatform));
 
 		// 订单：订单ID，平台，价格
 		declarer.declareStream(RaceConfig.STREAM_ORDER_PLATFORM,
-				new Fields("Id", "platform", "price"));
+				new Fields(RaceTopologyDef.orderId,
+						RaceTopologyDef.orderPlatform, RaceTopologyDef.orderPrice));
 	}
 
 	@Override

@@ -6,7 +6,6 @@ import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
-import backtype.storm.utils.Utils;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceUtils;
 import com.alibaba.middleware.race.model.OrderMessage;
@@ -27,8 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by Zheng Kun on 2016/7/3.
  */
-public class RocketMqSpout implements IRichSpout, MessageListenerConcurrently {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RocketMqSpout.class);
+public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpoutRocketMq.class);
     private ConcurrentHashMap<UUID, Values> pending;
 
     private SpoutOutputCollector collector;
