@@ -7,7 +7,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceConstant;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.SumMessage;

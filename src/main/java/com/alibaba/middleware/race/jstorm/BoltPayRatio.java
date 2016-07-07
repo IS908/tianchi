@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by kevin on 16-6-26.
@@ -38,7 +37,7 @@ public class BoltPayRatio implements IRichBolt {
         if (streamId.equals(RaceConstant.STREAM_STOP)) {
             LOG.info("### streamId {} got the end signal!");
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
-            long orderID = tuple.getLong(0);
+//            long orderID = tuple.getLong(0);
             short platform = tuple.getShort(1);
             long timestamp = tuple.getLong(2);
             double price = tuple.getDouble(3);
@@ -76,18 +75,19 @@ public class BoltPayRatio implements IRichBolt {
 
                 String res = String.format("%.2f",
                         wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue());
-//                TairOperatorImpl.getInstance().write(this.timestamp, res);
+                TairOperatorImpl.getInstance().write(this.timestamp, res);
                 LOG.info(">>> ratio : {}", res);
                 this.timestamp = timestamp;
-            } /*else if (this.timestamp > timestamp){
-                double wireless, pc;
+            } else if (this.timestamp > timestamp){
+                // TODO 此处添加补充小部分乱序的逻辑
+                /*double wireless, pc;
                 while (timestamp < this.timestamp) {
                     wireless = wirelessMap.get(timestamp).doubleValue();
                     pc = pcMap.get(timestamp).doubleValue();
                     TairOperatorImpl.getInstance().write(timestamp, wireless / pc);
                     timestamp += 60L;
-                }
-            }*/
+                }*/
+            }
 
         }
 
