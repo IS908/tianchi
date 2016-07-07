@@ -47,7 +47,6 @@ public class BoltSplitStream implements IRichBolt {
 		} else if (obj instanceof PaymentMessage) {
 			PaymentMessage message = (PaymentMessage) obj;
 			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,
-					// values[ 订单ID, 创建时间, 支付金额， 支付平台(无线/PC)]
 					new Values(message.getOrderId(), message.getPayPlatform(), (message.getCreateTime()/(60 * 1000)) * 60, message.getPayAmount()));
 		} else {
 			LOG.info("### got the end signal!!!");

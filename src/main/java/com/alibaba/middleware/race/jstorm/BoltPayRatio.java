@@ -37,7 +37,7 @@ public class BoltPayRatio implements IRichBolt {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_STOP)) {
             LOG.info("### streamId {} got the end signal!");
-        } else if (streamId.equals(RaceConstant.STREAM_MESSAGE)) {
+        } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
             long orderID = tuple.getLong(0);
             short platform = tuple.getShort(1);
             long timestamp = tuple.getLong(2);
@@ -48,7 +48,7 @@ public class BoltPayRatio implements IRichBolt {
                 if (pcPrice == null) {
                     AtomicDouble beforSum = pcMap.get(timestamp - 60L);
                     double befor = 0.0d;
-                    if (beforSum == null) {
+                    if (beforSum != null) {
                         befor = beforSum.doubleValue();
                     }
                     pcPrice = new AtomicDouble(befor);
@@ -60,7 +60,7 @@ public class BoltPayRatio implements IRichBolt {
                 if (wirelessPrice == null) {
                     AtomicDouble beforSum = wirelessMap.get(timestamp - 60L);
                     double befor = 0.0d;
-                    if (beforSum == null) {
+                    if (beforSum != null) {
                         befor = beforSum.doubleValue();
                     }
                     wirelessPrice = new AtomicDouble(befor);
@@ -90,10 +90,6 @@ public class BoltPayRatio implements IRichBolt {
             }*/
 
         }
-
-
-
-
 
 
 

@@ -38,20 +38,20 @@ public class RaceTopology {
          */
         Config conf = new Config();
 
-        LocalCluster cluster = new LocalCluster();
-        cluster.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology(conf).createTopology());
+//        LocalCluster cluster = new LocalCluster();
+//        cluster.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology(conf).createTopology());
 //        本地调试设定运行时间
 //        Utils.sleep(30000);
 //        cluster.killTopology(topologyName);
 //        cluster.shutdown();
 
 //        TODO 打包上传需注释上面 LocalCluster 部分，开启下面部分；同时 pom 包要开启 jstorm 的 provided
-        /*try {
+        try {
             StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology(conf).createTopology());
         } catch (AlreadyAliveException | InvalidTopologyException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
-        }*/
+        }
     }
 
     // 正式逻辑在这里组织
