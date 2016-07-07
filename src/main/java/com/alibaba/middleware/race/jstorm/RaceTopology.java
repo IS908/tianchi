@@ -7,6 +7,7 @@ import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.topology.TopologyBuilder;
 import backtype.storm.tuple.Fields;
+import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,9 @@ import org.slf4j.LoggerFactory;
 public class RaceTopology {
     private static Logger LOG = LoggerFactory.getLogger(RaceTopology.class);
 
+	public final static String TOPOLOGY_SPOUT_PARALLELISM_HINT = "spout.parallel";
+	public final static String TOPOLOGY_BOLT_PARALLELISM_HINT = "bolt.parallel";
+
     public static void main(String[] args) {
         /*
          * 全局config，局部配置在每个组件的 getComponentConfiguration() 方法中定义
@@ -42,7 +46,7 @@ public class RaceTopology {
 
 //        TODO 打包上传需注释上面 LocalCluster 部分，开启下面部分；同时 pom 包要开启 jstorm 的 provided
         try {
-            StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology().createTopology());
+            StormSubmitter.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology(conf).createTopology());
         } catch (AlreadyAliveException | InvalidTopologyException e) {
             LOG.error(e.getMessage());
             e.printStackTrace();
@@ -50,11 +54,11 @@ public class RaceTopology {
     }
 
     // 正式逻辑在这里组织
-    private static TopologyBuilder builtTopology() {
-        int spout_Parallelism_hint = 1;
-        int split_Parallelism_hint = 1;
-        int count_Parallelism_hint = 1;
-        int result_Parallelism_hint = 1;
+    private static TopologyBuilder builtTopology(Config conf) {
+        int spout_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_SPOUT_PARALLELISM_HINT), 1);
+        int split_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
+        int count_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
+        int result_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
 
         TopologyBuilder builder = new TopologyBuilder();
 
@@ -76,11 +80,13 @@ public class RaceTopology {
                 .globalGrouping(RaceConfig.ID_ORDER_TM);
 
         // PC端/无线端 支付数据分析
+        /*
         builder.setBolt(RaceConfig.ID_PAY_PC, new PayCountPCBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_PC, new Fields(RaceConfig.FIELD_PAY_PC));
 
         builder.setBolt(RaceConfig.ID_PAY_WIRELESS, new PayCountWirelessBolt(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConfig.ID_SPLIT_PLATFORM, RaceConfig.STREAM_PLATFORM_WIRELESS, new Fields(RaceConfig.FIELD_PAY_WIRELESS));
+		*/
 
         builder.setBolt(RaceConfig.ID_PAY_RATIO, new PayResultBolt(), result_Parallelism_hint)
                 .globalGrouping(RaceConfig.ID_PAY_PC)

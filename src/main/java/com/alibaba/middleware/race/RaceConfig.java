@@ -21,8 +21,10 @@ public class RaceConfig implements Serializable {
     public static final String ID_ORDER_SUM = "order_sum";//
 
     // StreamID
+    public static final String STREAM_ORDER_PLATFORM = "stream_order_platform";
     public static final String STREAM_PLATFORM_TB = "stream_platform_tb";
     public static final String STREAM_PLATFORM_TM = "stream_platform_tm";
+    public static final String STREAM_PAY_PLATFORM = "stream_pay_platform";
     public static final String STREAM_PLATFORM_PC = "stream_platform_pc";
     public static final String STREAM_PLATFORM_WIRELESS = "stream_platform_wireless";
 
