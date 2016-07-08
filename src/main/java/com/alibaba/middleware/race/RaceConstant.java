@@ -22,6 +22,7 @@ public class RaceConstant {
 
     public static final String ID_SPLIT_PLATFORM = "split_platform";//
 
+    public static final String ID_PAIR = "pair";
     public static final String ID_ORDER_TB = "order_tb";//
     public static final String ID_ORDER_TM = "order_tm";//
 

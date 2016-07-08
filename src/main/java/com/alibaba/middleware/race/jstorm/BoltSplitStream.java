@@ -30,16 +30,16 @@ public class BoltSplitStream implements IRichBolt {
 		if (obj instanceof OrderMessage) {
 			OrderMessage message = (OrderMessage) obj;
 			// 按平台（天猫/淘宝）划分支付消息数据流
-//			if (message.getSalerId().contains("tb_saler")) {
-//				// 淘宝平台订单数据
-//				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
-//						new Values(message.getOrderId(), "tb", message.getTotalPrice()));
-//			} else if (message.getSalerId().contains("tm_saler")) {
-//				// 天猫平台订单数据
-//				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
-//						new Values(message.getOrderId(), "tm", message.getTotalPrice()));
-//			}
-//			LOG.info("### orderMessage: {}", message);
+			if (message.getSalerId().contains("tb_saler")) {
+				// 淘宝平台订单数据
+				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
+						new Values(message.getOrderId(), "tb", message.getTotalPrice()));
+			} else if (message.getSalerId().contains("tm_saler")) {
+				// 天猫平台订单数据
+				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
+						new Values(message.getOrderId(), "tm", message.getTotalPrice()));
+			}
+			LOG.info("### orderMessage: {}", message);
 		} else if (obj instanceof PaymentMessage) {
 			PaymentMessage message = (PaymentMessage) obj;
 			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,

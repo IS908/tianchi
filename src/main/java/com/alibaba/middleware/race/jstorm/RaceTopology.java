@@ -1,7 +1,6 @@
 package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
@@ -40,10 +39,6 @@ public class RaceTopology {
 
 //        LocalCluster cluster = new LocalCluster();
 //        cluster.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology(conf).createTopology());
-//        本地调试设定运行时间
-//        Utils.sleep(30000);
-//        cluster.killTopology(topologyName);
-//        cluster.shutdown();
 
 //        TODO 打包上传需注释上面 LocalCluster 部分，开启下面部分；同时 pom 包要开启 jstorm 的 provided
         try {
@@ -74,6 +69,25 @@ public class RaceTopology {
         builder.setBolt(RaceConstant.ID_PAY_RATIO, new BoltPayRatio(), result_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
                         RaceConstant.STREAM_PAY_PLATFORM,
+                        new Fields(RaceConstant.payTime));
+
+        // 订单分平台统计没分钟交易额的数量
+        builder.setBolt(RaceConstant.ID_PAIR, new BoltMergeMessage(), count_Parallelism_hint)
+                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
+                        RaceConstant.STREAM_ORDER_PLATFORM,
+                        new Fields(RaceConstant.payTime))
+                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
+                        RaceConstant.STREAM_PAY_PLATFORM,
+                        new Fields(RaceConstant.payTime));
+
+        builder.setBolt(RaceConstant.ID_ORDER_TB, new BoltTBCount(), result_Parallelism_hint)
+                .fieldsGrouping(RaceConstant.ID_PAIR,
+                        RaceConstant.STREAM_PLATFORM_TB,
+                        new Fields(RaceConstant.payTime));
+
+        builder.setBolt(RaceConstant.ID_ORDER_TM, new BoltTMCount(), result_Parallelism_hint)
+                .fieldsGrouping(RaceConstant.ID_PAIR,
+                        RaceConstant.STREAM_PLATFORM_TM,
                         new Fields(RaceConstant.payTime));
         return builder;
     }

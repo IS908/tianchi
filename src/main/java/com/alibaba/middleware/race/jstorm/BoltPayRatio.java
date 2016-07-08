@@ -35,7 +35,7 @@ public class BoltPayRatio implements IRichBolt {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_STOP)) {
             double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
-            TairOperatorImpl.getInstance().write(this.timestamp, res);
+//            TairOperatorImpl.getInstance().write(this.timestamp, res);
             LOG.info("### streamId {} got the end signal!");
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
 //            long orderID = tuple.getLong(0);
@@ -81,7 +81,7 @@ public class BoltPayRatio implements IRichBolt {
                     return;
                 }
                 double res = round(tmpWireless.doubleValue() / tmpPc.doubleValue(), 2);
-                TairOperatorImpl.getInstance().write(this.timestamp, res);
+//                TairOperatorImpl.getInstance().write(this.timestamp, res);
                 LOG.info(">>> ratio {} : {}", this.timestamp, res);
                 this.timestamp = timestamp;
             } else if (this.timestamp > timestamp) {
@@ -98,8 +98,9 @@ public class BoltPayRatio implements IRichBolt {
                     double pc = atoPc.doubleValue();
 
                     double res = round(wireless / pc, 2);
-                    TairOperatorImpl.getInstance().write(timestamp, res);
+//                    TairOperatorImpl.getInstance().write(timestamp, res);
                     LOG.info(">>> new ratio {} : {}", this.timestamp, res);
+
                     timestamp += 60L;
                     if (flag == 0) { // PC
                         atoWireless.addAndGet(price);
@@ -126,7 +127,7 @@ public class BoltPayRatio implements IRichBolt {
     public void cleanup() {
         // TODO 关闭前将最后的结果写入 tair 中
         double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
-        TairOperatorImpl.getInstance().write(this.timestamp, res);
+//        TairOperatorImpl.getInstance().write(this.timestamp, res);
         LOG.info(">>> cleanup ratio {} : {}", this.timestamp, res);
     }
 
