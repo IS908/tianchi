@@ -28,5 +28,4 @@ public class RaceUtils {
         input.close();
         return kryo.readObject(input, tClass);
     }
-
 }
