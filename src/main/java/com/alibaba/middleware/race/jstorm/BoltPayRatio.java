@@ -75,24 +75,38 @@ public class BoltPayRatio implements IRichBolt {
             }
 
             if (this.timestamp < timestamp) {
-                double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
+                AtomicDouble tmpWireless = wirelessMap.get(this.timestamp);
+                AtomicDouble tmpPc = pcMap.get(this.timestamp);
+                if (tmpPc == null || tmpWireless == null) {
+                    return;
+                }
+                double res = round(tmpWireless.doubleValue() / tmpPc.doubleValue(), 2);
                 TairOperatorImpl.getInstance().write(this.timestamp, res);
                 LOG.info(">>> ratio {} : {}", this.timestamp, res);
                 this.timestamp = timestamp;
             } else if (this.timestamp > timestamp) {
-                // TODO 此处添加补充小部分乱序的逻辑
+                // TODO 此处添加补充小部分乱序的处理逻辑
                 flag = platform;
-                double wireless = wirelessMap.get(timestamp).doubleValue();
-                double pc = pcMap.get(timestamp).doubleValue();
+
                 while (timestamp <= this.timestamp) {
+                    AtomicDouble atoWireless = wirelessMap.get(timestamp);
+                    AtomicDouble atoPc = pcMap.get(timestamp);
+                    if (atoWireless == null || atoPc == null) {
+                        return;
+                    }
+                    double wireless = atoWireless.doubleValue();
+                    double pc = atoPc.doubleValue();
+
                     double res = round(wireless / pc, 2);
                     TairOperatorImpl.getInstance().write(timestamp, res);
                     LOG.info(">>> new ratio {} : {}", this.timestamp, res);
                     timestamp += 60L;
                     if (flag == 0) { // PC
-                        wireless = wirelessMap.get(timestamp).addAndGet(price);
+                        atoWireless.addAndGet(price);
+                        wirelessMap.put(timestamp, atoWireless);
                     } else if (flag == 1) { // 无线
-                        pc = pcMap.get(timestamp).addAndGet(price);
+                        atoPc.addAndGet(price);
+                        pcMap.put(timestamp, atoPc);
                     }
                 }
             }
