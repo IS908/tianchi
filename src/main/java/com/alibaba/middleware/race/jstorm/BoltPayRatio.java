@@ -1,18 +1,25 @@
 package com.alibaba.middleware.race.jstorm;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceConstant;
+import com.alibaba.middleware.race.Tair.TairOperatorImpl;
+import com.alibaba.middleware.race.model.TableItemFactory;
+import com.google.common.util.concurrent.AtomicDouble;
+
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
-import com.alibaba.middleware.race.RaceConstant;
-import com.alibaba.middleware.race.Tair.TairOperatorImpl;
-import com.google.common.util.concurrent.AtomicDouble;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by kevin on 16-6-26.
@@ -21,10 +28,8 @@ public class BoltPayRatio implements IRichBolt {
     private static final long serialVersionUID = -1910650485341329191L;
     private static Logger LOG = LoggerFactory.getLogger(BoltPayRatio.class);
 
-    private HashMap<Long, AtomicDouble> wirelessMap = new HashMap<>();
-    private HashMap<Long, AtomicDouble> pcMap = new HashMap<>();
-    private long timestamp = 0L;
-    private short flag = 0;
+    private Map<Long, AtomicDouble> wirelessMap = new HashMap<>();
+    private Map<Long, AtomicDouble> pcMap = new HashMap<>();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -34,101 +39,66 @@ public class BoltPayRatio implements IRichBolt {
     public void execute(Tuple tuple) {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_STOP)) {
-            double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
-//            TairOperatorImpl.getInstance().write(this.timestamp, res);
-            LOG.info("### streamId {} got the end signal!");
+            LOG.info("<<< stop signal");
+            // 累加
+            List<Pair> pcList = new ArrayList<>();
+            for (Map.Entry<Long, AtomicDouble> entry : pcMap.entrySet()) {
+                pcList.add(new Pair(entry.getKey(), entry.getValue().doubleValue()));
+            }
+            Collections.sort(pcList);
+
+            Map<Long, Double> pcTotalMap = new HashMap<>();
+            for (int i = 0; i < pcList.size(); i++) {
+                if (i > 0) {
+                    pcList.get(i).price += pcList.get(i - 1).price;
+                }
+                pcTotalMap.put(pcList.get(i).timestamp, pcList.get(i).price);
+            }
+
+            List<Pair> wirelessList = new ArrayList<>();
+            for (Map.Entry<Long, AtomicDouble> entry : wirelessMap.entrySet()) {
+                wirelessList.add(new Pair(entry.getKey(), entry.getValue().doubleValue()));
+            }
+            Collections.sort(wirelessList);
+            for (int i = 1; i < wirelessList.size(); i++) {
+                wirelessList.get(i).price += wirelessList.get(i - 1).price;
+            }
+
+            for (Pair wireless : wirelessList) {
+                Double pcPrice = pcTotalMap.get(wireless.timestamp);
+                if (pcPrice != null) {
+                    String key = RaceConfig.prex_ratio + wireless.timestamp;
+                    double value = TableItemFactory.round(wireless.price / pcPrice, 2);
+                    TairOperatorImpl.getInstance().write(key, value);
+                }
+            }
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
-//            long orderID = tuple.getLong(0);
+            //            long orderID = tuple.getLong(0);
             short platform = tuple.getShort(1);
             long timestamp = tuple.getLong(2);
             double price = tuple.getDouble(3);
-
-            if (this.timestamp == 0) {
-                this.timestamp = timestamp;
-                return;
-            }
-
-            if (platform == 0) {    // PC
-                AtomicDouble pcPrice = pcMap.get(timestamp);
-                if (pcPrice == null) {
-                    AtomicDouble beforSum = pcMap.get(timestamp - 60L);
-                    double befor = 0.0d;
-                    if (beforSum != null) {
-                        befor = beforSum.doubleValue();
-                    }
-                    pcPrice = new AtomicDouble(befor);
+            if (platform == 0) { // PC
+                AtomicDouble oldValue = pcMap.get(timestamp);
+                if (oldValue == null) {
+                    oldValue = new AtomicDouble(price);
+                    pcMap.put(timestamp, oldValue);
+                } else {
+                    oldValue.addAndGet(price);
                 }
-                pcPrice.addAndGet(price);
-                pcMap.put(timestamp, pcPrice);
-            } else {    // 无线
-                AtomicDouble wirelessPrice = wirelessMap.get(timestamp);
-                if (wirelessPrice == null) {
-                    AtomicDouble beforSum = wirelessMap.get(timestamp - 60L);
-                    double befor = 0.0d;
-                    if (beforSum != null) {
-                        befor = beforSum.doubleValue();
-                    }
-                    wirelessPrice = new AtomicDouble(befor);
-                }
-                wirelessPrice.addAndGet(price);
-                wirelessMap.put(timestamp, wirelessPrice);
-            }
-
-            if (this.timestamp < timestamp) {
-                AtomicDouble tmpWireless = wirelessMap.get(this.timestamp);
-                AtomicDouble tmpPc = pcMap.get(this.timestamp);
-                if (tmpPc == null || tmpWireless == null) {
-                    return;
-                }
-                double res = round(tmpWireless.doubleValue() / tmpPc.doubleValue(), 2);
-//                TairOperatorImpl.getInstance().write(this.timestamp, res);
-                LOG.info(">>> ratio {} : {}", this.timestamp, res);
-                this.timestamp = timestamp;
-            } else if (this.timestamp > timestamp) {
-                // TODO 此处添加补充小部分乱序的处理逻辑
-                flag = platform;
-
-                while (timestamp <= this.timestamp) {
-                    AtomicDouble atoWireless = wirelessMap.get(timestamp);
-                    AtomicDouble atoPc = pcMap.get(timestamp);
-                    if (atoWireless == null || atoPc == null) {
-                        return;
-                    }
-                    double wireless = atoWireless.doubleValue();
-                    double pc = atoPc.doubleValue();
-
-                    double res = round(wireless / pc, 2);
-//                    TairOperatorImpl.getInstance().write(timestamp, res);
-                    LOG.info(">>> new ratio {} : {}", this.timestamp, res);
-
-                    timestamp += 60L;
-                    if (flag == 0) { // PC
-                        atoWireless.addAndGet(price);
-                        wirelessMap.put(timestamp, atoWireless);
-                    } else if (flag == 1) { // 无线
-                        atoPc.addAndGet(price);
-                        pcMap.put(timestamp, atoPc);
-                    }
+            } else { // 无线
+                AtomicDouble oldValue = wirelessMap.get(timestamp);
+                if (oldValue == null) {
+                    wirelessMap.put(timestamp, new AtomicDouble(price));
+                } else {
+                    oldValue.addAndGet(price);
                 }
             }
         }
     }
 
-    private double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-
-        long factor = (long) Math.pow(10, places);
-        value = value * factor;
-        long tmp = Math.round(value);
-        return (double) tmp / factor;
-    }
-
     @Override
     public void cleanup() {
-        // TODO 关闭前将最后的结果写入 tair 中
-        double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
-//        TairOperatorImpl.getInstance().write(this.timestamp, res);
-        LOG.info(">>> cleanup ratio {} : {}", this.timestamp, res);
+
     }
 
     @Override
@@ -138,5 +108,25 @@ public class BoltPayRatio implements IRichBolt {
     @Override
     public Map<String, Object> getComponentConfiguration() {
         return null;
+    }
+
+    private class Pair implements Comparable<Pair> {
+        public long timestamp;
+        public double price;
+
+        public Pair(long timestamp, double price) {
+            this.timestamp = timestamp;
+            this.price = price;
+        }
+
+        @Override
+        public int compareTo(Pair o) {
+            if (timestamp < o.timestamp) {
+                return -1;
+            } else if (timestamp > o.timestamp) {
+                return 1;
+            }
+            return 0;
+        }
     }
 }
