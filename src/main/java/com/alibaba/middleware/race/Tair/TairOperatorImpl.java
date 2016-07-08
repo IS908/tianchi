@@ -1,5 +1,6 @@
 package com.alibaba.middleware.race.Tair;
 
+import com.alibaba.middleware.race.RaceConfig;
 import com.taobao.tair.DataEntry;
 import com.taobao.tair.Result;
 import com.taobao.tair.ResultCode;
