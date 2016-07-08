@@ -20,27 +20,33 @@ import java.util.Map;
 public class BoltPayRatio implements IRichBolt {
     private static final long serialVersionUID = -1910650485341329191L;
     private static Logger LOG = LoggerFactory.getLogger(BoltPayRatio.class);
-    private OutputCollector collector;
 
     private HashMap<Long, AtomicDouble> wirelessMap = new HashMap<>();
     private HashMap<Long, AtomicDouble> pcMap = new HashMap<>();
     private long timestamp = 0L;
+    private short flag = 0;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-        this.collector = collector;
     }
 
     @Override
     public void execute(Tuple tuple) {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_STOP)) {
+            double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
+            TairOperatorImpl.getInstance().write(this.timestamp, res);
             LOG.info("### streamId {} got the end signal!");
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
 //            long orderID = tuple.getLong(0);
             short platform = tuple.getShort(1);
             long timestamp = tuple.getLong(2);
             double price = tuple.getDouble(3);
+
+            if (this.timestamp == 0) {
+                this.timestamp = timestamp;
+                return;
+            }
 
             if (platform == 0) {    // PC
                 AtomicDouble pcPrice = pcMap.get(timestamp);
@@ -68,37 +74,46 @@ public class BoltPayRatio implements IRichBolt {
                 wirelessMap.put(timestamp, wirelessPrice);
             }
 
-            if (this.timestamp == 0) {
-                return;
-            }
             if (this.timestamp < timestamp) {
-
-                String res = String.format("%.2f",
-                        wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue());
+                double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
                 TairOperatorImpl.getInstance().write(this.timestamp, res);
-                LOG.info(">>> ratio : {}", res);
+                LOG.info(">>> ratio {} : {}", this.timestamp, res);
                 this.timestamp = timestamp;
-            } else if (this.timestamp > timestamp){
+            } else if (this.timestamp > timestamp) {
                 // TODO 此处添加补充小部分乱序的逻辑
-                /*double wireless, pc;
-                while (timestamp < this.timestamp) {
-                    wireless = wirelessMap.get(timestamp).doubleValue();
-                    pc = pcMap.get(timestamp).doubleValue();
-                    TairOperatorImpl.getInstance().write(timestamp, wireless / pc);
+                flag = platform;
+                double wireless = wirelessMap.get(timestamp).doubleValue();
+                double pc = pcMap.get(timestamp).doubleValue();
+                while (timestamp <= this.timestamp) {
+                    double res = round(wireless / pc, 2);
+                    TairOperatorImpl.getInstance().write(timestamp, res);
+                    LOG.info(">>> new ratio {} : {}", this.timestamp, res);
                     timestamp += 60L;
-                }*/
+                    if (flag == 0) { // PC
+                        wireless = wirelessMap.get(timestamp).addAndGet(price);
+                    } else if (flag == 1) { // 无线
+                        pc = pcMap.get(timestamp).addAndGet(price);
+                    }
+                }
             }
-
         }
+    }
 
+    private double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
 
-
-
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
     }
 
     @Override
     public void cleanup() {
         // TODO 关闭前将最后的结果写入 tair 中
+        double res = round(wirelessMap.get(this.timestamp).doubleValue() / pcMap.get(this.timestamp).doubleValue(), 2);
+        TairOperatorImpl.getInstance().write(this.timestamp, res);
+        LOG.info(">>> cleanup ratio {} : {}", this.timestamp, res);
     }
 
     @Override
