@@ -69,26 +69,31 @@ public class RaceTopology {
         builder.setBolt(RaceConstant.ID_PAY_RATIO, new BoltPayRatio(), result_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
                         RaceConstant.STREAM_PAY_PLATFORM,
-                        new Fields(RaceConstant.payTime));
+                        new Fields(RaceConstant.payTime))
+                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);;
 
-        // 订单分平台统计没分钟交易额的数量
+
+        /////////////////////// 订单分平台统计每分钟交易额的数量 ///////////////////////
+
+        // 订单支付信息配对后发送支付信息
         builder.setBolt(RaceConstant.ID_PAIR, new BoltMergeMessage(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
-                        RaceConstant.STREAM_ORDER_PLATFORM,
-                        new Fields(RaceConstant.payTime))
-                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
-                        RaceConstant.STREAM_PAY_PLATFORM,
-                        new Fields(RaceConstant.payTime));
+                        new Fields(RaceConstant.orderId))
+                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
 
-        builder.setBolt(RaceConstant.ID_ORDER_TB, new BoltTBCount(), result_Parallelism_hint)
+        // 计算淘宝每分钟交易额
+        builder.setBolt(RaceConstant.ID_ORDER_TB, new BoltTBCount(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_PAIR,
                         RaceConstant.STREAM_PLATFORM_TB,
-                        new Fields(RaceConstant.payTime));
+                        new Fields(RaceConstant.payTime))
+                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
 
-        builder.setBolt(RaceConstant.ID_ORDER_TM, new BoltTMCount(), result_Parallelism_hint)
+        // 计算天猫每分钟交易额
+        builder.setBolt(RaceConstant.ID_ORDER_TM, new BoltTMCount(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_PAIR,
                         RaceConstant.STREAM_PLATFORM_TM,
-                        new Fields(RaceConstant.payTime));
+                        new Fields(RaceConstant.payTime))
+                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);;
         return builder;
     }
 }

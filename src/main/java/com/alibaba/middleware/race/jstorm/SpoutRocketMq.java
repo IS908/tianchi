@@ -66,7 +66,8 @@ public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields(RaceConstant.FIELD_SOURCE_DATA));
+        declarer.declareStream(RaceConstant.STREAM_MESSAGE, new Fields(RaceConstant.FIELD_SOURCE_DATA));
+        declarer.declareStream(RaceConstant.STREAM_STOP, new Fields(RaceConstant.FIELD_SOURCE_DATA));
     }
 
     @Override
@@ -80,7 +81,7 @@ public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
             byte[] body = msg.getBody();
             if (body.length == 2 && body[0] == 0 && body[1] == 0) {
                 //Info: 生产者停止生成数据, 并不意味着马上结束
-                collector.emit(new Values("stop"));
+                collector.emit(RaceConstant.STREAM_STOP, new Values("stop"));
                 LOGGER.info("got the end signal!");
                 continue;
             }
@@ -89,10 +90,10 @@ public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
             // 付款消息
             if (RaceConfig.MqPayTopic.equals(topic)) {
                 PaymentMessage paymentMessage = RaceUtils.readKryoObject(PaymentMessage.class, body);
-                collector.emit(new Values(paymentMessage));
+                collector.emit(RaceConstant.STREAM_MESSAGE, new Values(paymentMessage));
             } else if (RaceConfig.MqTaobaoTradeTopic.equals(topic) || RaceConfig.MqTmallTradeTopic.equals(topic)) {
                 OrderMessage orderMessage = RaceUtils.readKryoObject(OrderMessage.class, body);
-                collector.emit(new Values(orderMessage));
+                collector.emit(RaceConstant.STREAM_MESSAGE, new Values(orderMessage));
             }
         }
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;

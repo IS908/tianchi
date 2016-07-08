@@ -26,6 +26,12 @@ public class BoltSplitStream implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
+		String streamId = tuple.getSourceStreamId();
+		if (streamId.equals(RaceConstant.STREAM_STOP)) {
+			collector.emit(RaceConstant.STREAM_STOP, new Values("stop"));
+			LOG.info("### got the end signal!!!");
+			return;
+		}
 		Object obj = tuple.getValue(0);
 		if (obj instanceof OrderMessage) {
 			OrderMessage message = (OrderMessage) obj;
@@ -44,8 +50,6 @@ public class BoltSplitStream implements IRichBolt {
 			PaymentMessage message = (PaymentMessage) obj;
 			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,
 					new Values(message.getOrderId(), message.getPayPlatform(), (message.getCreateTime()/(60 * 1000)) * 60, message.getPayAmount()));
-		} else {
-			LOG.info("### got the end signal!!!");
 		}
 	}
 
@@ -57,9 +61,9 @@ public class BoltSplitStream implements IRichBolt {
 						RaceConstant.payTime, RaceConstant.payAmount));
 
 		// 订单：订单ID，平台，价格
-//		declarer.declareStream(RaceConstant.STREAM_ORDER_PLATFORM,
-//				new Fields(RaceConstant.orderId,
-//						RaceConstant.orderPlatform, RaceConstant.orderPrice));
+		declarer.declareStream(RaceConstant.STREAM_ORDER_PLATFORM,
+				new Fields(RaceConstant.orderId,
+						RaceConstant.orderPlatform, RaceConstant.orderPrice));
 	}
 
 	@Override
