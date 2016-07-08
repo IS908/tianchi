@@ -49,13 +49,16 @@ public class BoltSplitStream implements IRichBolt {
 		} else if (obj instanceof PaymentMessage) {
 			PaymentMessage message = (PaymentMessage) obj;
 			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,
-					new Values(message.getOrderId(), message.getPayPlatform(), (message.getCreateTime()/(60 * 1000)) * 60, message.getPayAmount()));
+					new Values(message.getOrderId(), message.getPayPlatform(),
+							(message.getCreateTime()/(60 * 1000)) * 60,
+							message.getPayAmount()));
+			LOG.info("### paymentMessage: {}", message);
 		}
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		// 支付：订单ID，分钟时间戳，支付金额，支付平台
+		// 支付：订单ID，支付平台，分钟时间戳，支付金额
 		declarer.declareStream(RaceConstant.STREAM_PAY_PLATFORM,
 				new Fields(RaceConstant.payId, RaceConstant.payPlatform,
 						RaceConstant.payTime, RaceConstant.payAmount));
@@ -77,7 +80,6 @@ public class BoltSplitStream implements IRichBolt {
 
 	@Override
 	public Map<String, Object> getComponentConfiguration() {
-		Config conf = new Config();
-		return conf;
+		return null;
 	}
 }
