@@ -15,6 +15,9 @@ public class RaceConstant {
     public static final String payAmount = "price";
     public static final String payPlatform = "platform";
 
+    public static final String platformTB = "tb";
+    public static final String platformTM = "tm";
+
 
     // jstorm的拓扑流程中的个组件的ID统一在此处设置
     // ComponentID

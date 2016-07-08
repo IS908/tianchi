@@ -26,6 +26,7 @@ import java.util.Map;
  * Created by Zheng Kun on 2016/7/3.
  */
 public class SpoutRocketMq implements IRichSpout, MessageListenerConcurrently {
+    private static final long serialVersionUID = -1907451246429972212L;
     private static final Logger LOGGER = LoggerFactory.getLogger(SpoutRocketMq.class);
 
     private SpoutOutputCollector collector;

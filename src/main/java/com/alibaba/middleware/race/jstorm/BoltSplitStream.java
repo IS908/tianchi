@@ -8,6 +8,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceConstant;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
@@ -20,6 +21,7 @@ import java.util.Map;
  * 将拉取到的数据分流到各个处理下游
  */
 public class BoltSplitStream implements IRichBolt {
+	private static final long serialVersionUID = 6264734155123954277L;
 	private static Logger LOG = LoggerFactory.getLogger(BoltSplitStream.class);
 
 	private OutputCollector collector;
@@ -39,11 +41,15 @@ public class BoltSplitStream implements IRichBolt {
 			if (message.getSalerId().contains("tb_saler")) {
 				// 淘宝平台订单数据
 				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
-						new Values(message.getOrderId(), "tb", message.getTotalPrice()));
+						new Values(message.getOrderId(),
+								RaceConstant.platformTB,
+								message.getTotalPrice()));
 			} else if (message.getSalerId().contains("tm_saler")) {
 				// 天猫平台订单数据
 				collector.emit(RaceConstant.STREAM_ORDER_PLATFORM,
-						new Values(message.getOrderId(), "tm", message.getTotalPrice()));
+						new Values(message.getOrderId(),
+								RaceConstant.platformTM,
+								message.getTotalPrice()));
 			}
 			LOG.info("### orderMessage: {}", message);
 		} else if (obj instanceof PaymentMessage) {

@@ -8,15 +8,13 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.alibaba.middleware.race.RaceConstant;
-import com.alibaba.middleware.race.model.OrderMessage;
-import com.alibaba.middleware.race.model.SumMessage;
+import com.alibaba.middleware.race.model.OrderInfo;
+import com.alibaba.middleware.race.model.PayInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by kevin on 16-7-3.
@@ -25,8 +23,8 @@ public class BoltMergeMessage implements IRichBolt {
     private static final long serialVersionUID = 7124715562791604109L;
     private static Logger LOG = LoggerFactory.getLogger(BoltMergeMessage.class);
     OutputCollector collector;
-    private HashMap<Long, Double> orderMap = new HashMap<>();
-    private HashMap<Long, Double> payMap = new HashMap<>();
+    private HashMap<Long, OrderInfo> orderMap = new HashMap<>();
+    private HashMap<Long, PayInfo> payMap = new HashMap<>();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -37,12 +35,76 @@ public class BoltMergeMessage implements IRichBolt {
     public void execute(Tuple tuple) {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_ORDER_PLATFORM)) {
-            // 此处进行根据 OrderId 配对订单记录和支付记录
-
+            Long orderId = tuple.getLong(0);
+            String platform = tuple.getString(1);
+            Double price = tuple.getDouble(2);
+            // 配对操作
+            PayInfo payInfo = payMap.get(orderId);
+            if (payInfo == null) {
+                orderMap.put(orderId, new OrderInfo(platform, price));
+                return;
+            }
+            // 根据订单信息的平台划分，区分发射流
+            switch (platform) {
+                case RaceConstant.platformTB:
+                    this.collector.emit(RaceConstant.STREAM_PLATFORM_TB,
+                            new Values(payInfo.getTimestamp(), payInfo.getPrice()));
+                    break;
+                case RaceConstant.platformTM:
+                    this.collector.emit(RaceConstant.STREAM_PLATFORM_TM,
+                            new Values(payInfo.getTimestamp(), payInfo.getPrice()));
+                    break;
+                default:
+                    break;
+            }
+            // 移除操作
+            double res = price - payInfo.getPrice();
+            if (res > 0) {
+                orderMap.put(orderId, new OrderInfo(platform, res));
+            } else {
+                orderMap.remove(orderId);
+            }
+            payMap.remove(orderId);
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
-
+            Long orderId = tuple.getLong(0);
+            long timestamp = tuple.getLong(2);
+            double price = tuple.getDouble(3);
+            // 配对操作
+            OrderInfo orderInfo = orderMap.get(orderId);
+            if (orderInfo == null) {
+                payMap.put(orderId, new PayInfo(timestamp, price));
+                return;
+            }
+            // 根据订单信息的平台划分，区分发射流
+            switch (orderInfo.getPaltform()) {
+                case RaceConstant.platformTB:
+                    this.collector.emit(RaceConstant.STREAM_PLATFORM_TB,
+                            new Values(timestamp, price));
+                    break;
+                case RaceConstant.platformTM:
+                    this.collector.emit(RaceConstant.STREAM_PLATFORM_TM,
+                            new Values(timestamp, price));
+                    break;
+                default:
+                    break;
+            }
+            // 移除操作
+            double res = orderInfo.getPrice() - price;
+            if (res > 0) {
+                orderMap.put(orderId, new OrderInfo(orderInfo.getPaltform(), res));
+            } else {
+                orderMap.remove(orderId);
+            }
+            payMap.remove(orderId);
         } else if (streamId.equals(RaceConstant.STREAM_STOP)) {
             // 消息结束标志处理
+            // TODO 将未发射的 paymentMessage 发射出去，清空
+            // TODO 存疑，发射时并不能区分平台
+//            Iterator<Map.Entry<Long, PayInfo>> iterator = payMap.entrySet().iterator();
+//            while (iterator.hasNext()) {
+//                Map.Entry<Long, PayInfo> map = iterator.next();
+//                this.collector.emit()
+//            }
         }
 
     }
@@ -59,7 +121,6 @@ public class BoltMergeMessage implements IRichBolt {
         declarer.declareStream(RaceConstant.STREAM_PLATFORM_TM,
                 new Fields(RaceConstant.payTime, RaceConstant.payAmount));
 
-//        declarer.declare(new Fields(RaceConstant.FIELD_ORDER_SUM));
     }
 
     @Override
