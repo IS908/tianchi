@@ -52,7 +52,7 @@ public class BoltTMCount implements IRichBolt {
                 return;
             }
             TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + cur_timestamp, res.doubleValue());
-            LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, res.doubleValue());
+//            LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, res.doubleValue());
 
             cur_timestamp = timestamp;
 
@@ -64,7 +64,7 @@ public class BoltTMCount implements IRichBolt {
                 tmMap.put(timestamp, new_res);
             }
             TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + timestamp, new_res.doubleValue());
-            LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, new_res.doubleValue());
+//            LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, new_res.doubleValue());
 
         }
     }
