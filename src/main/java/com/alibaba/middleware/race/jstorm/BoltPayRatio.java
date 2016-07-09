@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.channels.Pipe;
 import java.util.*;
 
 /**
@@ -28,8 +29,8 @@ public class BoltPayRatio implements IRichBolt {
 
     private Map<Long, AtomicDouble> wirelessMap = new HashMap<>();
     private Map<Long, AtomicDouble> pcMap = new HashMap<>();
-    private long lastTimestamp = -1;
-    private long maxTimestamp = -1;
+    private long pcMaxTimestamp = 0L;
+    private long wirelessMaxTimestamp = 0L;
     private Set<Long> alterTimeSet = new HashSet<>();
 
 
@@ -56,10 +57,10 @@ public class BoltPayRatio implements IRichBolt {
             long timestamp = tuple.getLongByField(RaceConstant.payTime);
             double price = tuple.getDoubleByField(RaceConstant.payAmount);
             if (platform == 0) { // PC
-                if (timestamp < maxTimestamp) {
-                    countRepair(pcMap, price, timestamp, maxTimestamp);
+                if (timestamp < pcMaxTimestamp) {
+                    countRepair(pcMap, price, timestamp, pcMaxTimestamp);
                     // 该tuple的时间小于最大时间，出现了乱序
-                } else if(timestamp == maxTimestamp) {
+                } else if(timestamp == pcMaxTimestamp) {
                     // tuple的时间是正在处理的时间，该tuple属于当前的时间
                     AtomicDouble oldValue = pcMap.get(timestamp);
                     if (oldValue == null) {
@@ -69,22 +70,30 @@ public class BoltPayRatio implements IRichBolt {
                     }
                     pcMap.put(timestamp, oldValue);
                     alterTimeSet.add(timestamp);
-                } else {
+                } else {// timestamp > maxPcTimestamp
                     // tuple的时间 大于最大时间，新的一分钟的数据出现了
-                    lastTimestamp = maxTimestamp;
-                    maxTimestamp = timestamp;
-                    AtomicDouble lastPrice = pcMap.get(lastTimestamp);
-                    if (lastPrice != null) {
-                        pcMap.put(timestamp, new AtomicDouble(price + lastPrice.doubleValue()));
+                    AtomicDouble total = pcMap.get(pcMaxTimestamp);
+                    if (total != null) {
+                        pcMap.put(timestamp, new AtomicDouble(price + total.doubleValue()));
                     } else {
                         pcMap.put(timestamp, new AtomicDouble(price));
                     }
+                    pcMaxTimestamp = timestamp;
+
+//                    lastTimestamp = maxTimestamp;
+//                    maxTimestamp = timestamp;
+//                    AtomicDouble lastPrice = pcMap.get(lastTimestamp);
+//                    if (lastPrice != null) {
+//                        pcMap.put(timestamp, new AtomicDouble(price + lastPrice.doubleValue()));
+//                    } else {
+//                        pcMap.put(timestamp, new AtomicDouble(price));
+//                    }
                 }
             } else { // 无线
-                if (timestamp < maxTimestamp) {
-                    countRepair(wirelessMap, price, timestamp, maxTimestamp);
+                if (timestamp < wirelessMaxTimestamp) {
+                    countRepair(wirelessMap, price, timestamp, wirelessMaxTimestamp);
                     // 该tuple的时间小于最大时间
-                } else if(timestamp == maxTimestamp) {
+                } else if(timestamp == wirelessMaxTimestamp) {
                     // tuple的时间是正在处理的时间，该tuple属于当前的时间
                     AtomicDouble oldValue = wirelessMap.get(timestamp);
                     if (oldValue == null) {
@@ -96,14 +105,22 @@ public class BoltPayRatio implements IRichBolt {
                     alterTimeSet.add(timestamp);
                 } else {
                     // tuple的时间 大于最大时间，新的一分钟的数据出现了
-                    lastTimestamp = maxTimestamp;
-                    maxTimestamp = timestamp;
-                    AtomicDouble lastPrice = wirelessMap.get(lastTimestamp);
-                    if (lastPrice != null) {
-                        wirelessMap.put(timestamp, new AtomicDouble(price + lastPrice.doubleValue()));
+                    AtomicDouble total = wirelessMap.get(wirelessMaxTimestamp);
+                    if (total != null) {
+                        wirelessMap.put(timestamp, new AtomicDouble(price + total.doubleValue()));
                     } else {
                         wirelessMap.put(timestamp, new AtomicDouble(price));
                     }
+                    wirelessMaxTimestamp = timestamp;
+
+//                    lastTimestamp = maxTimestamp;
+//                    maxTimestamp = timestamp;
+//                    AtomicDouble lastPrice = wirelessMap.get(lastTimestamp);
+//                    if (lastPrice != null) {
+//                        wirelessMap.put(timestamp, new AtomicDouble(price + lastPrice.doubleValue()));
+//                    } else {
+//                        wirelessMap.put(timestamp, new AtomicDouble(price));
+//                    }
                 }
             }
         }
