@@ -57,7 +57,7 @@ public class BoltSplitStream implements IRichBolt {
 			PaymentMessage message = (PaymentMessage) tuple.getValueByField(RaceConstant.FIELD_SOURCE_DATA);
 			long timestamp = (message.getCreateTime()/(60 * 1000)) * 60;
 			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,
-					new Values(message.getOrderId(), message.getPayPlatform(),
+					new Values(message.getPayPlatform(),
 							timestamp, message.getPayAmount()));
 
 			collector.emit(RaceConstant.STREAM2MERGE,
@@ -70,7 +70,7 @@ public class BoltSplitStream implements IRichBolt {
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		// 支付：订单ID，支付平台，分钟时间戳，支付金额
 		declarer.declareStream(RaceConstant.STREAM_PAY_PLATFORM,
-				new Fields(RaceConstant.payId, RaceConstant.payPlatform,
+				new Fields(RaceConstant.payPlatform,
 						RaceConstant.payTime, RaceConstant.payAmount));
 
 

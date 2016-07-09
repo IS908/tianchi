@@ -28,8 +28,8 @@ public class BoltPayRatio implements IRichBolt {
 
     private Map<Long, AtomicDouble> wirelessMap = new HashMap<>();
     private Map<Long, AtomicDouble> pcMap = new HashMap<>();
-    private double lastTimestamp = -1;
-    private double maxTimestamp = -1;
+    private long lastTimestamp = -1;
+    private long maxTimestamp = -1;
     private Set<Long> alterTimeSet = new HashSet<>();
 
 
@@ -52,14 +52,13 @@ public class BoltPayRatio implements IRichBolt {
             write2Tair();
             LOG.info("stop signal");
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
-            //            long orderID = tuple.getLong(0);
             short platform = tuple.getShortByField(RaceConstant.payPlatform);
             long timestamp = tuple.getLongByField(RaceConstant.payTime);
             double price = tuple.getDoubleByField(RaceConstant.payAmount);
             if (platform == 0) { // PC
                 if (timestamp < maxTimestamp) {
+                    countRepair(pcMap, price, timestamp, maxTimestamp);
                     // 该tuple的时间小于最大时间，出现了乱序
-                    // 可以忽略
                 } else if(timestamp == maxTimestamp) {
                     // tuple的时间是正在处理的时间，该tuple属于当前的时间
                     AtomicDouble oldValue = pcMap.get(timestamp);
@@ -83,6 +82,7 @@ public class BoltPayRatio implements IRichBolt {
                 }
             } else { // 无线
                 if (timestamp < maxTimestamp) {
+                    countRepair(wirelessMap, price, timestamp, maxTimestamp);
                     // 该tuple的时间小于最大时间
                 } else if(timestamp == maxTimestamp) {
                     // tuple的时间是正在处理的时间，该tuple属于当前的时间
@@ -107,6 +107,22 @@ public class BoltPayRatio implements IRichBolt {
                 }
             }
         }
+    }
+
+    private void countRepair(Map<Long, AtomicDouble> map, double price, long cur_timestamp, long max_timestamp) {
+        AtomicDouble curTotal = map.get(cur_timestamp);
+        if (curTotal == null) {
+            curTotal = new AtomicDouble(0.0);
+        }
+        curTotal.addAndGet(price);
+        map.put(cur_timestamp, curTotal);
+
+        AtomicDouble maxTotal = map.get(max_timestamp);
+        if (maxTotal == null) {
+            maxTotal = new AtomicDouble(0.0);
+        }
+        maxTotal.addAndGet(price);
+        map.put(max_timestamp, maxTotal);
     }
 
     private void write2Tair() {
