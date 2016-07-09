@@ -27,7 +27,7 @@ public class BoltSplitStream implements IRichBolt {
 	@Override
 	public void execute(Tuple tuple) {
 		String type = tuple.getStringByField(RaceConstant.FIELD_TYPE);
-		if (type.equals(RaceConstant.STREAM_STOP)) {
+		if (type.equals(RaceConstant.stop)) {
 			collector.emit(RaceConstant.STREAM_STOP, new Values("stop"));
 			LOG.info("### got the end signal!!!");
 			return;
@@ -50,10 +50,13 @@ public class BoltSplitStream implements IRichBolt {
 //			LOG.info("### orderMessage: {}", message);
 		} else if (type.equals("pay")) {
 			PaymentMessage message = (PaymentMessage) tuple.getValueByField(RaceConstant.FIELD_SOURCE_DATA);
+			long timestamp = (message.getCreateTime()/(60 * 1000)) * 60;
 			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,
 					new Values(message.getOrderId(), message.getPayPlatform(),
-							(message.getCreateTime()/(60 * 1000)) * 60,
-							message.getPayAmount()));
+							timestamp, message.getPayAmount()));
+
+			collector.emit(RaceConstant.STREAM2MERGE,
+					new Values(message.getOrderId(), timestamp, message.getPayAmount()));
 //			LOG.info("### paymentMessage: {}", message);
 		}
 	}
@@ -65,6 +68,9 @@ public class BoltSplitStream implements IRichBolt {
 				new Fields(RaceConstant.payId, RaceConstant.payPlatform,
 						RaceConstant.payTime, RaceConstant.payAmount));
 
+
+		declarer.declareStream(RaceConstant.STREAM2MERGE,
+				new Fields(RaceConstant.payId, RaceConstant.payTime, RaceConstant.payAmount));
 		// 订单：订单ID，平台，价格
 		declarer.declareStream(RaceConstant.STREAM_ORDER_PLATFORM,
 				new Fields(RaceConstant.orderId,

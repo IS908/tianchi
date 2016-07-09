@@ -17,6 +17,7 @@ public class RaceConstant {
 
     public static final String platformTB = "tb";
     public static final String platformTM = "tm";
+    public static final String stop = "stop";
 
 
     // jstorm的拓扑流程中的个组件的ID统一在此处设置
@@ -36,6 +37,7 @@ public class RaceConstant {
     public static final String STREAM_ORDER_PLATFORM = "order_platform";
     public static final String STREAM_PLATFORM_TB = "platform_tb";
     public static final String STREAM_PLATFORM_TM = "platform_tm";
+    public static final String STREAM2MERGE = "merge_pay";
     public static final String STREAM_PAY_PLATFORM = "pay_platform";
 
     // FieldName

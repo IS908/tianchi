@@ -1,6 +1,7 @@
 package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
+import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
@@ -9,6 +10,9 @@ import backtype.storm.tuple.Fields;
 import com.alibaba.jstorm.utils.JStormUtils;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceConstant;
+import com.alibaba.middleware.race.jstorm.platform.BoltMergeMessage;
+import com.alibaba.middleware.race.jstorm.platform.BoltTBCount;
+import com.alibaba.middleware.race.jstorm.platform.BoltTMCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,10 +55,10 @@ public class RaceTopology {
 
     // 正式逻辑在这里组织
     private static TopologyBuilder builtTopology(Config conf) {
-        int spout_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_SPOUT_PARALLELISM_HINT), 1);
-        int split_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
-        int count_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
-        int result_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
+        int spout_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_SPOUT_PARALLELISM_HINT), 1);
+        int split_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
+        int count_Parallelism_hint = 2;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
+        int result_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
 
         TopologyBuilder builder = new TopologyBuilder();
 
@@ -66,12 +70,11 @@ public class RaceTopology {
                         new Fields(RaceConstant.FIELD_TYPE));
 
         // PC端/无线端 支付数据分析
-        builder.setBolt(RaceConstant.ID_PAY_RATIO, new BoltPayRatio(), result_Parallelism_hint)
-                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
-                        RaceConstant.STREAM_PAY_PLATFORM,
-                        new Fields(RaceConstant.payTime))
-                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
-        ;
+//        builder.setBolt(RaceConstant.ID_PAY_RATIO, new BoltPayRatio(), result_Parallelism_hint)
+//                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
+//                        RaceConstant.STREAM_PAY_PLATFORM,
+//                        new Fields(RaceConstant.payTime))
+//                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
 
 
         /////////////////////// 订单分平台统计每分钟交易额的数量 ///////////////////////
@@ -79,12 +82,11 @@ public class RaceTopology {
         // 订单支付信息配对后发送支付信息
         builder.setBolt(RaceConstant.ID_PAIR, new BoltMergeMessage(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
-                        RaceConstant.STREAM_PAY_PLATFORM,
+                        RaceConstant.STREAM2MERGE,
                         new Fields(RaceConstant.orderId))
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
                         RaceConstant.STREAM_ORDER_PLATFORM,
-                        new Fields(RaceConstant.orderId))
-                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
+                        new Fields(RaceConstant.orderId));
 
         // 计算淘宝每分钟交易额
         builder.setBolt(RaceConstant.ID_ORDER_TB, new BoltTBCount(), count_Parallelism_hint)

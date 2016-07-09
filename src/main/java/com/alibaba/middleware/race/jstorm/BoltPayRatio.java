@@ -63,8 +63,8 @@ public class BoltPayRatio implements IRichBolt {
                 if (pcPrice != null) {
                     String key = RaceConfig.prex_ratio + wireless.timestamp;
                     double value = TableItemFactory.round(wireless.price / pcPrice, 2);
-                    TairOperatorImpl.getInstance().write(key, value);
-//                    LOG.info("### {}:{}", key, value);
+//                    TairOperatorImpl.getInstance().write(key, value);
+                    LOG.info(">>> {}:{}", key, value);
                 }
             }
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {

@@ -35,9 +35,9 @@ public class BoltMergeMessage implements IRichBolt {
     public void execute(Tuple tuple) {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_ORDER_PLATFORM)) {
-            Long orderId = tuple.getLong(0);
-            String platform = tuple.getString(1);
-            Double price = tuple.getDouble(2);
+            Long orderId = tuple.getLongByField(RaceConstant.orderId);
+            String platform = tuple.getStringByField(RaceConstant.orderPlatform);
+            Double price = tuple.getDoubleByField(RaceConstant.orderPrice);
             // 配对操作
             PayInfo payInfo = payMap.get(orderId);
             if (payInfo == null) {
@@ -65,10 +65,11 @@ public class BoltMergeMessage implements IRichBolt {
                 orderMap.remove(orderId);
             }
             payMap.remove(orderId);
-        } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
-            Long orderId = tuple.getLong(0);
-            long timestamp = tuple.getLong(2);
-            double price = tuple.getDouble(3);
+        } else if (streamId.equals(RaceConstant.STREAM2MERGE)) {
+            Long orderId = tuple.getLongByField(RaceConstant.payId);
+            long timestamp = tuple.getLongByField(RaceConstant.payTime);
+            double price = tuple.getDoubleByField(RaceConstant.payAmount);
+
             // 配对操作
             OrderInfo orderInfo = orderMap.get(orderId);
             if (orderInfo == null) {
@@ -96,15 +97,6 @@ public class BoltMergeMessage implements IRichBolt {
                 orderMap.remove(orderId);
             }
             payMap.remove(orderId);
-        } else if (streamId.equals(RaceConstant.STREAM_STOP)) {
-            // 消息结束标志处理
-            // TODO 将未发射的 paymentMessage 发射出去，清空
-            // TODO 存疑，发射时并不能区分平台
-//            Iterator<Map.Entry<Long, PayInfo>> iterator = payMap.entrySet().iterator();
-//            while (iterator.hasNext()) {
-//                Map.Entry<Long, PayInfo> map = iterator.next();
-//                this.collector.emit()
-//            }
         }
 
     }

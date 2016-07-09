@@ -33,6 +33,10 @@ public class BoltTBCount implements IRichBolt {
     public void execute(Tuple tuple) {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_STOP)) {
+            AtomicDouble total = tbMap.get(cur_timestamp);
+            if (total == null) return;
+            TairOperatorImpl.getInstance().write(
+                    RaceConfig.prex_taobao + cur_timestamp, total.doubleValue());
             return;
         }
         long timestamp = tuple.getLongByField(RaceConstant.payTime);
@@ -53,13 +57,14 @@ public class BoltTBCount implements IRichBolt {
             }
             TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + cur_timestamp, res.doubleValue());
 //            LOG.info("### {}:{}", RaceConfig.prex_taobao + cur_timestamp, res.doubleValue());
+
             cur_timestamp = timestamp;
 
         } else if (cur_timestamp > timestamp) {
             AtomicDouble new_res = tbMap.get(timestamp);
             if (new_res == null) {
                 new_res = new AtomicDouble(0.0);
-                total.addAndGet(price);
+                new_res.addAndGet(price);
                 tbMap.put(timestamp, new_res);
             }
             TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + timestamp, new_res.doubleValue());
@@ -69,6 +74,10 @@ public class BoltTBCount implements IRichBolt {
 
     @Override
     public void cleanup() {
+        AtomicDouble total = tbMap.get(cur_timestamp);
+        if (total == null) return;
+        TairOperatorImpl.getInstance().write(
+                RaceConfig.prex_taobao + cur_timestamp, total.doubleValue());
 
     }
 

@@ -33,6 +33,11 @@ public class BoltTMCount implements IRichBolt {
     public void execute(Tuple tuple) {
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_STOP)) {
+            AtomicDouble total = tmMap.get(cur_timestamp);
+            if (total == null)  return;
+            TairOperatorImpl.getInstance().write(
+                    RaceConfig.prex_tmall + cur_timestamp, total.doubleValue());
+//            LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, total.doubleValue());
             return;
         }
         long timestamp = tuple.getLongByField(RaceConstant.payTime);
@@ -51,7 +56,8 @@ public class BoltTMCount implements IRichBolt {
             if (res == null) {
                 return;
             }
-            TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + cur_timestamp, res.doubleValue());
+            TairOperatorImpl.getInstance().write(
+                    RaceConfig.prex_taobao + cur_timestamp, res.doubleValue());
 //            LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, res.doubleValue());
 
             cur_timestamp = timestamp;
@@ -60,10 +66,11 @@ public class BoltTMCount implements IRichBolt {
             AtomicDouble new_res = tmMap.get(timestamp);
             if (new_res == null) {
                 new_res = new AtomicDouble(0.0);
-                total.addAndGet(price);
+                new_res.addAndGet(price);
                 tmMap.put(timestamp, new_res);
             }
-            TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + timestamp, new_res.doubleValue());
+            TairOperatorImpl.getInstance().write(
+                    RaceConfig.prex_taobao + timestamp, new_res.doubleValue());
 //            LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, new_res.doubleValue());
 
         }
@@ -71,7 +78,11 @@ public class BoltTMCount implements IRichBolt {
 
     @Override
     public void cleanup() {
-
+        AtomicDouble total = tmMap.get(cur_timestamp);
+        if (total == null)  return;
+        TairOperatorImpl.getInstance().write(
+                RaceConfig.prex_tmall + cur_timestamp, total.doubleValue());
+//        LOG.info("### {}:{}", RaceConfig.prex_tmall + cur_timestamp, total.doubleValue());
     }
 
     @Override
