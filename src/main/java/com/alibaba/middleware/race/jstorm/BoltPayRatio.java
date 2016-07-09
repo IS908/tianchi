@@ -7,6 +7,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceConstant;
+import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.alibaba.middleware.race.model.TableItemFactory;
 import com.google.common.util.concurrent.AtomicDouble;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class BoltPayRatio implements IRichBolt {
                 if (pcPrice != null) {
                     String key = RaceConfig.prex_ratio + wireless.timestamp;
                     double value = TableItemFactory.round(wireless.price / pcPrice, 2);
-//                    TairOperatorImpl.getInstance().write(key, value);
+                    TairOperatorImpl.getInstance().write(key, value);
                     LOG.info("### {}:{}", key, value);
                 }
             }
