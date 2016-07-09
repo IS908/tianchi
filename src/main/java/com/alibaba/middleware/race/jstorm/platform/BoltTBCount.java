@@ -1,5 +1,7 @@
 package com.alibaba.middleware.race.jstorm.platform;
 
+import backtype.storm.Config;
+import backtype.storm.Constants;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
@@ -31,53 +33,41 @@ public class BoltTBCount implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        String streamId = tuple.getSourceStreamId();
-        if (streamId.equals(RaceConstant.STREAM_STOP)) {
-            AtomicDouble total = tbMap.get(cur_timestamp);
-            if (total == null) return;
-            TairOperatorImpl.getInstance().write(
-                    RaceConfig.prex_taobao + cur_timestamp, total.doubleValue());
-            return;
-        }
-        long timestamp = tuple.getLongByField(RaceConstant.payTime);
-        double price = tuple.getDoubleByField(RaceConstant.payAmount);
-        if (cur_timestamp == 0) {
-            cur_timestamp = timestamp;
-        }
-        AtomicDouble total = tbMap.get(timestamp);
-        if (total == null) {
-            total = new AtomicDouble(0.0);
-        }
-        total.addAndGet(price);
-        tbMap.put(timestamp, total);
-        if (cur_timestamp < timestamp) {
-            AtomicDouble res = tbMap.get(cur_timestamp);
-            if (res == null) {
+        if (tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
+                && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID)) {
+            write3Tair();
+        } else {
+            if (tuple.getSourceStreamId().equals(RaceConstant.STREAM_STOP)) {
+                write3Tair();
                 return;
             }
-            TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + cur_timestamp, res.doubleValue());
-//            LOG.info("### {}:{}", RaceConfig.prex_taobao + cur_timestamp, res.doubleValue());
-
-            cur_timestamp = timestamp;
-
-        } else if (cur_timestamp > timestamp) {
-            AtomicDouble new_res = tbMap.get(timestamp);
-            if (new_res == null) {
-                new_res = new AtomicDouble(0.0);
-                new_res.addAndGet(price);
-                tbMap.put(timestamp, new_res);
+            long timestamp = tuple.getLongByField(RaceConstant.payTime);
+            double price = tuple.getDoubleByField(RaceConstant.payAmount);
+            cur_timestamp = Math.max(timestamp, cur_timestamp);
+            AtomicDouble total = tbMap.get(timestamp);
+            if (total == null) {
+                total = new AtomicDouble(0.0);
             }
-            TairOperatorImpl.getInstance().write(RaceConfig.prex_taobao + timestamp, new_res.doubleValue());
-//            LOG.info("### {}:{}", RaceConfig.prex_taobao + cur_timestamp, new_res.doubleValue());
+            total.addAndGet(price);
+            tbMap.put(timestamp, total);
+        }
+    }
+
+    private void write3Tair() {
+        long before = cur_timestamp - 60L;
+        long after = cur_timestamp + 60L;
+        for (long timestamp = before; timestamp <= after; timestamp += 60) {
+            AtomicDouble result = tbMap.get(timestamp);
+            if (result != null) {
+                TairOperatorImpl.getInstance().write(
+                        RaceConfig.prex_taobao + timestamp, result.doubleValue());
+            }
         }
     }
 
     @Override
     public void cleanup() {
-        AtomicDouble total = tbMap.get(cur_timestamp);
-        if (total == null) return;
-        TairOperatorImpl.getInstance().write(
-                RaceConfig.prex_taobao + cur_timestamp, total.doubleValue());
+        write3Tair();
 
     }
 
@@ -88,6 +78,8 @@ public class BoltTBCount implements IRichBolt {
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        return null;
+        Config conf = new Config();
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 15);
+        return conf;
     }
 }
