@@ -1,5 +1,6 @@
 package com.alibaba.middleware.race.jstorm.platform;
 
+import backtype.storm.Constants;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
@@ -33,6 +34,11 @@ public class BoltMergeMessage implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
+        if (tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
+                && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID)) {
+            return;
+        }
+
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_ORDER_PLATFORM)) {
             Long orderId = tuple.getLongByField(RaceConstant.orderId);

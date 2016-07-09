@@ -1,5 +1,6 @@
 package com.alibaba.middleware.race.jstorm;
 
+import backtype.storm.Constants;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
@@ -26,6 +27,10 @@ public class BoltSplitStream implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
+        if (tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
+                && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID)) {
+            return;
+        }
 		String type = tuple.getStringByField(RaceConstant.FIELD_TYPE);
 		if (type.equals(RaceConstant.stop)) {
 			collector.emit(RaceConstant.STREAM_STOP, new Values("stop"));

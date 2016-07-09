@@ -40,6 +40,7 @@ public class RaceTopology {
          * 优先级：局部 > 全局
          */
         Config conf = new Config();
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 15);
 
 //        LocalCluster cluster = new LocalCluster();
 //        cluster.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology(conf).createTopology());
