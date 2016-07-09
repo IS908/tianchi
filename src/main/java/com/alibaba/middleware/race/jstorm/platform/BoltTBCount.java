@@ -1,5 +1,6 @@
 package com.alibaba.middleware.race.jstorm.platform;
 
+import backtype.storm.Config;
 import backtype.storm.Constants;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -65,11 +66,12 @@ public class BoltTBCount implements IRichBolt {
     }
 
     private void write2Tair() {
+        if (timeSet.isEmpty())  return;
         for (long timestamp : this.timeSet) {
             AtomicDouble result = tbMap.get(timestamp);
             if (result != null) {
-                TairOperatorImpl.getInstance().write(
-                        RaceConfig.prex_taobao + timestamp, result.doubleValue());
+//                TairOperatorImpl.getInstance().write(
+//                        RaceConfig.prex_taobao + timestamp, result.doubleValue());
                 LOG.info(">>> {}:{}", RaceConfig.prex_taobao + timestamp, result.doubleValue());
             }
         }
@@ -89,6 +91,8 @@ public class BoltTBCount implements IRichBolt {
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        return null;
+        Config conf = new Config();
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 15);
+        return conf;
     }
 }

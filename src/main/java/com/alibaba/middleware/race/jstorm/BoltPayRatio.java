@@ -1,5 +1,6 @@
 package com.alibaba.middleware.race.jstorm;
 
+import backtype.storm.Config;
 import backtype.storm.Constants;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -130,7 +131,7 @@ public class BoltPayRatio implements IRichBolt {
                 AtomicDouble pcPrice = pcMap.get(time);
                 if (wirelessPrice != null && pcPrice != null) {
                     double ratio = TableItemFactory.round(wirelessPrice.doubleValue() / pcPrice.doubleValue(), 2);
-                    TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
+//                    TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
                     LOG.info(">>> {}:{}", RaceConfig.prex_ratio + time, ratio);
                 }
             }
@@ -149,7 +150,9 @@ public class BoltPayRatio implements IRichBolt {
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        return null;
+        Config conf = new Config();
+        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 15);
+        return conf;
     }
 
 }

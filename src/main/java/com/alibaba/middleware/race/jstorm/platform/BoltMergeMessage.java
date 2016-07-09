@@ -34,16 +34,11 @@ public class BoltMergeMessage implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        if (tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
-                && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID)) {
-            return;
-        }
-
         String streamId = tuple.getSourceStreamId();
         if (streamId.equals(RaceConstant.STREAM_ORDER_PLATFORM)) {
-            Long orderId = tuple.getLongByField(RaceConstant.orderId);
+            long orderId = tuple.getLongByField(RaceConstant.orderId);
             String platform = tuple.getStringByField(RaceConstant.orderPlatform);
-            Double price = tuple.getDoubleByField(RaceConstant.orderPrice);
+            double price = tuple.getDoubleByField(RaceConstant.orderPrice);
             // 配对操作
             PayInfo payInfo = payMap.get(orderId);
             if (payInfo == null) {
@@ -72,7 +67,7 @@ public class BoltMergeMessage implements IRichBolt {
             }
             payMap.remove(orderId);
         } else if (streamId.equals(RaceConstant.STREAM2MERGE)) {
-            Long orderId = tuple.getLongByField(RaceConstant.payId);
+            long orderId = tuple.getLongByField(RaceConstant.payId);
             long timestamp = tuple.getLongByField(RaceConstant.payTime);
             double price = tuple.getDoubleByField(RaceConstant.payAmount);
 

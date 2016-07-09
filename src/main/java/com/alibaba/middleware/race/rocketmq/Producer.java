@@ -9,6 +9,8 @@ import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
 import com.alibaba.rocketmq.client.producer.SendCallback;
 import com.alibaba.rocketmq.client.producer.SendResult;
 import com.alibaba.rocketmq.common.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 import java.util.concurrent.Semaphore;
@@ -17,7 +19,7 @@ import java.util.concurrent.Semaphore;
  * Producer，发送消息
  */
 public class Producer {
-
+    private static Logger LOG = LoggerFactory.getLogger(Producer.class);
     private static Random rand = new Random();
     private static int count = 3000;
 
@@ -40,12 +42,14 @@ public class Producer {
         final String[] topics = new String[]{RaceConfig.MqTaobaoTradeTopic, RaceConfig.MqTmallTradeTopic};
         final Semaphore semaphore = new Semaphore(0);
 
-        for (int i = 0; i < count; i++) {
+        while (true) {
             try {
                 final int platform = rand.nextInt(2);
+                long timestamp = rand.nextInt(120000);
+//                LOG.info("timestamp:{}", timestamp);
                 final OrderMessage orderMessage =
                         (platform == 0 ? OrderMessage.createTbaoMessage() : OrderMessage.createTmallMessage());
-                orderMessage.setCreateTime(System.currentTimeMillis());
+                orderMessage.setCreateTime(System.currentTimeMillis() + timestamp);
 
                 byte[] body = RaceUtils.writeKryoObject(orderMessage);
 
@@ -97,10 +101,10 @@ public class Producer {
                 e.printStackTrace();
                 Thread.sleep(1000);
             }
-            Thread.sleep(1);
+            Thread.sleep(3);
         }
 
-        semaphore.acquire(count);
+        /*semaphore.acquire(count);
 
         //用一个short标识生产者停止生产数据
         byte[] zero = new byte[]{0, 0};
@@ -117,6 +121,6 @@ public class Producer {
         }
         Thread.sleep(1000);
 
-        producer.shutdown();
+        producer.shutdown();*/
     }
 }

@@ -27,10 +27,6 @@ public class BoltSplitStream implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-        if (tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
-                && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID)) {
-            return;
-        }
 		String type = tuple.getStringByField(RaceConstant.FIELD_TYPE);
 		if (type.equals(RaceConstant.stop)) {
 			collector.emit(RaceConstant.STREAM_STOP, new Values("stop"));

@@ -1,6 +1,7 @@
 package com.alibaba.middleware.race.jstorm;
 
 import backtype.storm.Config;
+import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.InvalidTopologyException;
@@ -38,7 +39,7 @@ public class RaceTopology {
          * 优先级：局部 > 全局
          */
         Config conf = new Config();
-        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 15);
+        conf.setNumAckers(0);
 
 //        LocalCluster cluster = new LocalCluster();
 //        cluster.submitTopology(RaceConfig.JstormTopologyName, conf, builtTopology(conf).createTopology());
