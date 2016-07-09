@@ -43,7 +43,7 @@ public class BoltTBCount implements IRichBolt {
             // 系统计时信号，执行写tair操作
             write2Tair();
             flag = false;
-        } else if (tuple.getSourceComponent().equals(RaceConstant.ID_PAIR)
+        } else if (tuple.getSourceComponent().equals(RaceConstant.ID_SPLIT_PLATFORM)
                 && tuple.getSourceStreamId().equals(RaceConstant.STREAM_STOP)) {
             // 结束信号，执行写tair操作
             write2Tair();
@@ -72,9 +72,9 @@ public class BoltTBCount implements IRichBolt {
                 TairOperatorImpl.getInstance().write(
                         RaceConfig.prex_taobao + timestamp, result.doubleValue());
 //                LOG.info(">>> {}:{}", RaceConfig.prex_taobao + timestamp, result.doubleValue());
-                this.timeSet.remove(timestamp);
             }
         }
+        timeSet.clear();
     }
 
     @Override
@@ -90,8 +90,6 @@ public class BoltTBCount implements IRichBolt {
 
     @Override
     public Map<String, Object> getComponentConfiguration() {
-        Config conf = new Config();
-        conf.put(Config.TOPOLOGY_TICK_TUPLE_FREQ_SECS, 15);
-        return conf;
+        return null;
     }
 }
