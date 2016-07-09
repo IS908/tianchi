@@ -73,6 +73,7 @@ public class BoltTMCount implements IRichBolt {
                 TairOperatorImpl.getInstance().write(
                         RaceConfig.prex_tmall + timestamp, result.doubleValue());
 //                LOG.info(">>> {}:{}", RaceConfig.prex_tmall + timestamp, result.doubleValue());
+                this.timeSet.remove(timestamp);
             }
         }
     }
