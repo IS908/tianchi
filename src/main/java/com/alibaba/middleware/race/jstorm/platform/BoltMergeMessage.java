@@ -1,4 +1,4 @@
-package com.alibaba.middleware.race.jstorm;
+package com.alibaba.middleware.race.jstorm.platform;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
