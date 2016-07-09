@@ -52,7 +52,7 @@ public class RaceTopology {
     // 正式逻辑在这里组织
     private static TopologyBuilder builtTopology(Config conf) {
         int spout_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_SPOUT_PARALLELISM_HINT), 1);
-        int split_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
+        int split_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
         int count_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
         int result_Parallelism_hint = JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
 
@@ -63,14 +63,15 @@ public class RaceTopology {
         //  从rocketMQ中拉取数据
         builder.setBolt(RaceConstant.ID_SPLIT_PLATFORM, new BoltSplitStream(), split_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPOUT_SOURCE,
-                        new Fields(RaceConstant.FIELD_SOURCE_DATA));
+                        new Fields(RaceConstant.FIELD_TYPE));
 
         // PC端/无线端 支付数据分析
         builder.setBolt(RaceConstant.ID_PAY_RATIO, new BoltPayRatio(), result_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
                         RaceConstant.STREAM_PAY_PLATFORM,
                         new Fields(RaceConstant.payTime))
-                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);;
+                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
+        ;
 
 
         /////////////////////// 订单分平台统计每分钟交易额的数量 ///////////////////////
@@ -78,6 +79,10 @@ public class RaceTopology {
         // 订单支付信息配对后发送支付信息
         builder.setBolt(RaceConstant.ID_PAIR, new BoltMergeMessage(), count_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
+                        RaceConstant.STREAM_PAY_PLATFORM,
+                        new Fields(RaceConstant.orderId))
+                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
+                        RaceConstant.STREAM_ORDER_PLATFORM,
                         new Fields(RaceConstant.orderId))
                 .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
 
@@ -93,7 +98,8 @@ public class RaceTopology {
                 .fieldsGrouping(RaceConstant.ID_PAIR,
                         RaceConstant.STREAM_PLATFORM_TM,
                         new Fields(RaceConstant.payTime))
-                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);;
+                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
+        ;
         return builder;
     }
 }

@@ -1,25 +1,18 @@
 package com.alibaba.middleware.race.jstorm;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.middleware.race.RaceConfig;
-import com.alibaba.middleware.race.RaceConstant;
-import com.alibaba.middleware.race.Tair.TairOperatorImpl;
-import com.alibaba.middleware.race.model.TableItemFactory;
-import com.google.common.util.concurrent.AtomicDouble;
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
+import com.alibaba.middleware.race.RaceConfig;
+import com.alibaba.middleware.race.RaceConstant;
+import com.alibaba.middleware.race.model.TableItemFactory;
+import com.google.common.util.concurrent.AtomicDouble;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 /**
  * Created by kevin on 16-6-26.
@@ -69,7 +62,8 @@ public class BoltPayRatio implements IRichBolt {
                 if (pcPrice != null) {
                     String key = RaceConfig.prex_ratio + wireless.timestamp;
                     double value = TableItemFactory.round(wireless.price / pcPrice, 2);
-                    TairOperatorImpl.getInstance().write(key, value);
+//                    TairOperatorImpl.getInstance().write(key, value);
+                    LOG.info("### {}:{}", key, value);
                 }
             }
         } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {

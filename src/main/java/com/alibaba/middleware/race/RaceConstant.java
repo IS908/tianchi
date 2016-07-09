@@ -29,32 +29,16 @@ public class RaceConstant {
     public static final String ID_ORDER_TB = "order_tb";//
     public static final String ID_ORDER_TM = "order_tm";//
 
-    public static final String ID_PAY_PC = "payment_pc";//
-    public static final String ID_PAY_WIRELESS = "payment_wireless";//
-
     public static final String ID_PAY_RATIO = "pay_ratio";//
-    public static final String ID_ORDER_SUM = "order_sum";//
 
     // StreamID
-    public static final String STREAM_MESSAGE = "s_message";
-    public static final String STREAM_STOP = "s_stop";
-    public static final String STREAM_ORDER_PLATFORM = "stream_order_platform";
-    public static final String STREAM_PLATFORM_TB = "stream_platform_tb";
-    public static final String STREAM_PLATFORM_TM = "stream_platform_tm";
-    public static final String STREAM_PAY_PLATFORM = "stream_pay_platform";
-    public static final String STREAM_PLATFORM_PC = "stream_platform_pc";
-    public static final String STREAM_PLATFORM_WIRELESS = "stream_platform_wireless";
+    public static final String STREAM_STOP = "stop";
+    public static final String STREAM_ORDER_PLATFORM = "order_platform";
+    public static final String STREAM_PLATFORM_TB = "platform_tb";
+    public static final String STREAM_PLATFORM_TM = "platform_tm";
+    public static final String STREAM_PAY_PLATFORM = "pay_platform";
 
     // FieldName
+    public static final String FIELD_TYPE = "type";
     public static final String FIELD_SOURCE_DATA = "message";
-    public static final String FIELD_STOP = "stop";
-
-    public static final String FIELD_ORDER_TB = "field_order_tb";
-    public static final String FIELD_ORDER_TM = "field_order_tm";
-
-    public static final String FIELD_PAY_PC = "field_pc";
-    public static final String FIELD_PAY_WIRELESS = "field_wireless";
-
-    public static final String FIELD_PAY_RATIO = "field_pay_ratio";
-    public static final String FIELD_ORDER_SUM = "field_order_sum";
 }

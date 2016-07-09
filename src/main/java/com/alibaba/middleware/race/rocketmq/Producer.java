@@ -19,7 +19,7 @@ import java.util.concurrent.Semaphore;
 public class Producer {
 
     private static Random rand = new Random();
-    private static int count = 3000;
+    private static int count = 300000;
 
     /**
      * 这是一个模拟堆积消息的程序，生成的消息模型和我们比赛的消息模型是一样的，
@@ -40,83 +40,82 @@ public class Producer {
         final String[] topics = new String[]{RaceConfig.MqTaobaoTradeTopic, RaceConfig.MqTmallTradeTopic};
         final Semaphore semaphore = new Semaphore(0);
 
-        while (true) {
-            for (int i = 0; i < count; i++) {
-                try {
-                    final int platform = rand.nextInt(2);
-                    final OrderMessage orderMessage =
-                            (platform == 0 ? OrderMessage.createTbaoMessage() : OrderMessage.createTmallMessage());
-                    orderMessage.setCreateTime(System.currentTimeMillis());
-
-                    byte[] body = RaceUtils.writeKryoObject(orderMessage);
-
-                    Message msgToBroker = new Message(topics[platform], body);
-
-                    producer.send(msgToBroker, new SendCallback() {
-                        public void onSuccess(SendResult sendResult) {
-                            // System.out.println(orderMessage);
-                            semaphore.release();
-                        }
-
-                        public void onException(Throwable throwable) {
-                            throwable.printStackTrace();
-                        }
-                    });
-
-                    //Send Pay message
-                    PaymentMessage[] paymentMessages = PaymentMessage.createPayMentMsg(orderMessage);
-                    double amount = 0;
-                    for (final PaymentMessage paymentMessage : paymentMessages) {
-                        int retVal = Double.compare(paymentMessage.getPayAmount(), 0);
-                        if (retVal < 0) {
-                            throw new RuntimeException("price < 0 !!!!!!!!");
-                        }
-
-                        if (retVal > 0) {
-                            amount += paymentMessage.getPayAmount();
-                            final Message messageToBroker =
-                                    new Message(RaceConfig.MqPayTopic, RaceUtils.writeKryoObject(paymentMessage));
-                            producer.send(messageToBroker, new SendCallback() {
-                                public void onSuccess(SendResult sendResult) {
-                                    // System.out.println(paymentMessage);
-                                }
-
-                                public void onException(Throwable throwable) {
-                                    throwable.printStackTrace();
-                                }
-                            });
-                        } else {
-                            //
-                        }
-                    }
-
-                    if (Double.compare(amount, orderMessage.getTotalPrice()) != 0) {
-                        throw new RuntimeException("totalprice is not equal.");
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Thread.sleep(1000);
-                }
-            }
-
-            semaphore.acquire(count);
-
-            //用一个short标识生产者停止生产数据
-            byte[] zero = new byte[]{0, 0};
-            Message endMsgTB = new Message(RaceConfig.MqTaobaoTradeTopic, zero);
-            Message endMsgTM = new Message(RaceConfig.MqTmallTradeTopic, zero);
-            Message endMsgPay = new Message(RaceConfig.MqPayTopic, zero);
-
+        for (int i = 0; i < count; i++) {
             try {
-                producer.send(endMsgTB);
-                producer.send(endMsgTM);
-                producer.send(endMsgPay);
+                final int platform = rand.nextInt(2);
+                final OrderMessage orderMessage =
+                        (platform == 0 ? OrderMessage.createTbaoMessage() : OrderMessage.createTmallMessage());
+                orderMessage.setCreateTime(System.currentTimeMillis());
+
+                byte[] body = RaceUtils.writeKryoObject(orderMessage);
+
+                Message msgToBroker = new Message(topics[platform], body);
+
+                producer.send(msgToBroker, new SendCallback() {
+                    public void onSuccess(SendResult sendResult) {
+                        // System.out.println(orderMessage);
+                        semaphore.release();
+                    }
+
+                    public void onException(Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
+                });
+
+                //Send Pay message
+                PaymentMessage[] paymentMessages = PaymentMessage.createPayMentMsg(orderMessage);
+                double amount = 0;
+                for (final PaymentMessage paymentMessage : paymentMessages) {
+                    int retVal = Double.compare(paymentMessage.getPayAmount(), 0);
+                    if (retVal < 0) {
+                        throw new RuntimeException("price < 0 !!!!!!!!");
+                    }
+
+                    if (retVal > 0) {
+                        amount += paymentMessage.getPayAmount();
+                        final Message messageToBroker =
+                                new Message(RaceConfig.MqPayTopic, RaceUtils.writeKryoObject(paymentMessage));
+                        producer.send(messageToBroker, new SendCallback() {
+                            public void onSuccess(SendResult sendResult) {
+                                // System.out.println(paymentMessage);
+                            }
+
+                            public void onException(Throwable throwable) {
+                                throwable.printStackTrace();
+                            }
+                        });
+                    } else {
+                        //
+                    }
+                }
+
+                if (Double.compare(amount, orderMessage.getTotalPrice()) != 0) {
+                    throw new RuntimeException("totalprice is not equal.");
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
+                Thread.sleep(1000);
             }
-            Thread.sleep(1000);
+            Thread.sleep(1);
         }
+
+        semaphore.acquire(count);
+
+        //用一个short标识生产者停止生产数据
+        byte[] zero = new byte[]{0, 0};
+        Message endMsgTB = new Message(RaceConfig.MqTaobaoTradeTopic, zero);
+        Message endMsgTM = new Message(RaceConfig.MqTmallTradeTopic, zero);
+        Message endMsgPay = new Message(RaceConfig.MqPayTopic, zero);
+
+        try {
+            producer.send(endMsgTB);
+            producer.send(endMsgTM);
+            producer.send(endMsgPay);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.sleep(1000);
 
         //        producer.shutdown();
     }

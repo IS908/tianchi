@@ -1,6 +1,5 @@
 package com.alibaba.middleware.race.jstorm;
 
-import backtype.storm.Config;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
@@ -8,7 +7,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceConstant;
 import com.alibaba.middleware.race.model.OrderMessage;
 import com.alibaba.middleware.race.model.PaymentMessage;
@@ -28,15 +26,13 @@ public class BoltSplitStream implements IRichBolt {
 
 	@Override
 	public void execute(Tuple tuple) {
-		String streamId = tuple.getSourceStreamId();
-		if (streamId.equals(RaceConstant.STREAM_STOP)) {
+		String type = tuple.getStringByField(RaceConstant.FIELD_TYPE);
+		if (type.equals(RaceConstant.STREAM_STOP)) {
 			collector.emit(RaceConstant.STREAM_STOP, new Values("stop"));
 			LOG.info("### got the end signal!!!");
 			return;
-		}
-		Object obj = tuple.getValue(0);
-		if (obj instanceof OrderMessage) {
-			OrderMessage message = (OrderMessage) obj;
+		} else if (type.equals("order")) {
+			OrderMessage message = (OrderMessage) tuple.getValueByField(RaceConstant.FIELD_SOURCE_DATA);
 			// 按平台（天猫/淘宝）划分支付消息数据流
 			if (message.getSalerId().contains("tb_saler")) {
 				// 淘宝平台订单数据
@@ -51,14 +47,14 @@ public class BoltSplitStream implements IRichBolt {
 								RaceConstant.platformTM,
 								message.getTotalPrice()));
 			}
-			LOG.info("### orderMessage: {}", message);
-		} else if (obj instanceof PaymentMessage) {
-			PaymentMessage message = (PaymentMessage) obj;
+//			LOG.info("### orderMessage: {}", message);
+		} else if (type.equals("pay")) {
+			PaymentMessage message = (PaymentMessage) tuple.getValueByField(RaceConstant.FIELD_SOURCE_DATA);
 			collector.emit(RaceConstant.STREAM_PAY_PLATFORM,
 					new Values(message.getOrderId(), message.getPayPlatform(),
 							(message.getCreateTime()/(60 * 1000)) * 60,
 							message.getPayAmount()));
-			LOG.info("### paymentMessage: {}", message);
+//			LOG.info("### paymentMessage: {}", message);
 		}
 	}
 
@@ -73,6 +69,9 @@ public class BoltSplitStream implements IRichBolt {
 		declarer.declareStream(RaceConstant.STREAM_ORDER_PLATFORM,
 				new Fields(RaceConstant.orderId,
 						RaceConstant.orderPlatform, RaceConstant.orderPrice));
+
+		// 发送停止消息
+		declarer.declareStream(RaceConstant.STREAM_STOP, new Fields("stop"));
 	}
 
 	@Override
