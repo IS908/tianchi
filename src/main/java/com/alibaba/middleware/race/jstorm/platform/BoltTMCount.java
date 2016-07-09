@@ -15,7 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by kevin on 16-7-8.
@@ -25,7 +27,7 @@ public class BoltTMCount implements IRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(BoltTMCount.class);
 
     private Map<Long, AtomicDouble> tmMap = new HashMap<>();
-    private long cur_timestamp = 0L;
+    private Set<Long> timeSet = new HashSet<>();
     private boolean flag = false;
 
     @Override
@@ -39,32 +41,33 @@ public class BoltTMCount implements IRichBolt {
                 && tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
                 && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID)) {
             // 系统计时信号，执行写tair操作
-            write3Tair();
+            write2Tair();
             flag = false;
         } else if (tuple.getSourceComponent().equals(RaceConstant.ID_PAIR)
                 && tuple.getSourceStreamId().equals(RaceConstant.STREAM_STOP)) {
             // 结束信号，执行写tair操作
-            write3Tair();
+            write2Tair();
         } else if (tuple.getSourceComponent().equals(RaceConstant.ID_PAIR)
                 && tuple.getSourceStreamId().equals(RaceConstant.STREAM_PLATFORM_TM)) {
             // 正常处理逻辑
             long timestamp = tuple.getLongByField(RaceConstant.payTime);
             double price = tuple.getDoubleByField(RaceConstant.payAmount);
-            cur_timestamp = Math.max(timestamp, cur_timestamp);
+
             AtomicDouble total = tmMap.get(timestamp);
             if (total == null) {
                 total = new AtomicDouble(0.0);
             }
             total.addAndGet(price);
             tmMap.put(timestamp, total);
+
+            // 记录两次tick之间变动的时间戳
+            timeSet.add(timestamp);
             flag = true;
         }
     }
 
-    private void write3Tair() {
-        long before = cur_timestamp - 60L;
-        long after = cur_timestamp + 60L;
-        for (long timestamp = before; timestamp <= after; timestamp += 60) {
+    private void write2Tair() {
+        for (Long timestamp: this.timeSet) {
             AtomicDouble result = tmMap.get(timestamp);
             if (result != null) {
                 TairOperatorImpl.getInstance().write(
@@ -76,7 +79,7 @@ public class BoltTMCount implements IRichBolt {
 
     @Override
     public void cleanup() {
-        write3Tair();
+        write2Tair();
     }
 
     @Override

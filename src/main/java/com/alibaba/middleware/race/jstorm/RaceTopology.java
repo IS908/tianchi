@@ -58,7 +58,7 @@ public class RaceTopology {
         int spout_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_SPOUT_PARALLELISM_HINT), 1);
         int split_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
         int merge_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
-        int count_Parallelism_hint = 2;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
+        int count_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
         int result_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
 
         TopologyBuilder builder = new TopologyBuilder();
