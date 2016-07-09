@@ -1,5 +1,6 @@
 package com.alibaba.middleware.race.jstorm;
 
+import backtype.storm.Config;
 import backtype.storm.Constants;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -41,30 +42,20 @@ public class BoltPayRatio implements IRichBolt {
         String componentId = tuple.getSourceComponent();
         String streamId = tuple.getSourceStreamId();
 
-        if (RaceConstant.STREAM_STOP.equals(streamId)) {
-            // 停止信号
-            LOG.info("stop signal");
-        } else if (Constants.SYSTEM_COMPONENT_ID.equals(componentId) && Constants.SYSTEM_TICK_STREAM_ID.equals(streamId)){
+        if (Constants.SYSTEM_COMPONENT_ID.equals(componentId)
+                && Constants.SYSTEM_TICK_STREAM_ID.equals(streamId)){
             // tick stream singal
             // 开始写数据
-            if (!alterTimeSet.isEmpty()) {
-                for (Long time : alterTimeSet) {
-                    AtomicDouble wirelessPrice = wirelessMap.get(time);
-                    AtomicDouble pcPrice = pcMap.get(time);
-                    if (wirelessPrice != null && pcPrice != null) {
-                        double ratio = TableItemFactory.round(wirelessPrice.doubleValue() / pcPrice.doubleValue(), 2);
-                        TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
-                    }
-                }
-                alterTimeSet.clear();
-            }
-
-        }
-        else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
+            write2Tair();
+        } else if (RaceConstant.STREAM_STOP.equals(streamId)) {
+            // 停止信号
+            write2Tair();
+            LOG.info("stop signal");
+        } else if (streamId.equals(RaceConstant.STREAM_PAY_PLATFORM)) {
             //            long orderID = tuple.getLong(0);
-            short platform = tuple.getShort(1);
-            long timestamp = tuple.getLong(2);
-            double price = tuple.getDouble(3);
+            short platform = tuple.getShortByField(RaceConstant.payPlatform);
+            long timestamp = tuple.getLongByField(RaceConstant.payTime);
+            double price = tuple.getDoubleByField(RaceConstant.payAmount);
             if (platform == 0) { // PC
                 if (timestamp < maxTimestamp) {
                     // 该tuple的时间小于最大时间，出现了乱序
@@ -118,9 +109,23 @@ public class BoltPayRatio implements IRichBolt {
         }
     }
 
+    private void write2Tair() {
+        if (!alterTimeSet.isEmpty()) {
+            for (Long time : alterTimeSet) {
+                AtomicDouble wirelessPrice = wirelessMap.get(time);
+                AtomicDouble pcPrice = pcMap.get(time);
+                if (wirelessPrice != null && pcPrice != null) {
+                    double ratio = TableItemFactory.round(wirelessPrice.doubleValue() / pcPrice.doubleValue(), 2);
+                    TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
+                }
+            }
+            alterTimeSet.clear();
+        }
+    }
+
     @Override
     public void cleanup() {
-
+        write2Tair();
     }
 
     @Override
