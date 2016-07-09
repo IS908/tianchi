@@ -57,6 +57,7 @@ public class RaceTopology {
     private static TopologyBuilder builtTopology(Config conf) {
         int spout_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_SPOUT_PARALLELISM_HINT), 1);
         int split_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
+        int merge_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
         int count_Parallelism_hint = 2;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 2);
         int result_Parallelism_hint = 1;//JStormUtils.parseInt(conf.get(TOPOLOGY_BOLT_PARALLELISM_HINT), 1);
 
@@ -70,17 +71,17 @@ public class RaceTopology {
                         new Fields(RaceConstant.FIELD_TYPE));
 
         // PC端/无线端 支付数据分析
-//        builder.setBolt(RaceConstant.ID_PAY_RATIO, new BoltPayRatio(), result_Parallelism_hint)
-//                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
-//                        RaceConstant.STREAM_PAY_PLATFORM,
-//                        new Fields(RaceConstant.payTime))
-//                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
+        builder.setBolt(RaceConstant.ID_PAY_RATIO, new BoltPayRatio(), result_Parallelism_hint)
+                .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
+                        RaceConstant.STREAM_PAY_PLATFORM,
+                        new Fields(RaceConstant.payTime))
+                .allGrouping(RaceConstant.ID_SPLIT_PLATFORM, RaceConstant.STREAM_STOP);
 
 
         /////////////////////// 订单分平台统计每分钟交易额的数量 ///////////////////////
 
         // 订单支付信息配对后发送支付信息
-        builder.setBolt(RaceConstant.ID_PAIR, new BoltMergeMessage(), count_Parallelism_hint)
+        builder.setBolt(RaceConstant.ID_PAIR, new BoltMergeMessage(), merge_Parallelism_hint)
                 .fieldsGrouping(RaceConstant.ID_SPLIT_PLATFORM,
                         RaceConstant.STREAM2MERGE,
                         new Fields(RaceConstant.orderId))
