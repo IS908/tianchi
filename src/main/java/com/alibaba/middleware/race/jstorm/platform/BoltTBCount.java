@@ -70,8 +70,8 @@ public class BoltTBCount implements IRichBolt {
         for (long timestamp : this.timeSet) {
             AtomicDouble result = tbMap.get(timestamp);
             if (result != null) {
-//                TairOperatorImpl.getInstance().write(
-//                        RaceConfig.prex_taobao + timestamp, result.doubleValue());
+                TairOperatorImpl.getInstance().write(
+                        RaceConfig.prex_taobao + timestamp, result.doubleValue());
                 LOG.info(">>> {}:{}", RaceConfig.prex_taobao + timestamp, result.doubleValue());
             }
         }

@@ -131,7 +131,7 @@ public class BoltPayRatio implements IRichBolt {
                 AtomicDouble pcPrice = pcMap.get(time);
                 if (wirelessPrice != null && pcPrice != null) {
                     double ratio = TableItemFactory.round(wirelessPrice.doubleValue() / pcPrice.doubleValue(), 2);
-//                    TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
+                    TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
                     LOG.info(">>> {}:{}", RaceConfig.prex_ratio + time, ratio);
                 }
             }

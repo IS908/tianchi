@@ -71,8 +71,8 @@ public class BoltTMCount implements IRichBolt {
         for (Long timestamp: this.timeSet) {
             AtomicDouble result = tmMap.get(timestamp);
             if (result != null) {
-//                TairOperatorImpl.getInstance().write(
-//                        RaceConfig.prex_tmall + timestamp, result.doubleValue());
+                TairOperatorImpl.getInstance().write(
+                        RaceConfig.prex_tmall + timestamp, result.doubleValue());
                 LOG.info(">>> {}:{}", RaceConfig.prex_tmall + timestamp, result.doubleValue());
             }
         }
