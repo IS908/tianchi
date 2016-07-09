@@ -9,6 +9,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
 import com.alibaba.middleware.race.RaceConfig;
 import com.alibaba.middleware.race.RaceConstant;
+import com.alibaba.middleware.race.Tair.TairOperatorImpl;
 import com.google.common.util.concurrent.AtomicDouble;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,9 +67,9 @@ public class BoltTBCount implements IRichBolt {
         for (long timestamp = before; timestamp <= after; timestamp += 60) {
             AtomicDouble result = tbMap.get(timestamp);
             if (result != null) {
-//                TairOperatorImpl.getInstance().write(
-//                        RaceConfig.prex_taobao + timestamp, result.doubleValue());
-                LOG.info(">>> {}:{}", RaceConfig.prex_taobao + timestamp, result.doubleValue());
+                TairOperatorImpl.getInstance().write(
+                        RaceConfig.prex_taobao + timestamp, result.doubleValue());
+//                LOG.info(">>> {}:{}", RaceConfig.prex_taobao + timestamp, result.doubleValue());
             }
         }
     }
