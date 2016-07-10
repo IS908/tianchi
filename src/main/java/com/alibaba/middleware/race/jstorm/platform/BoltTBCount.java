@@ -76,7 +76,6 @@ public class BoltTBCount implements IRichBolt {
     @Override
     public void cleanup() {
         write2Tair();
-
     }
 
     @Override

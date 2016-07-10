@@ -29,10 +29,10 @@ public class BoltPayRatio implements IRichBolt {
 
     private Map<Long, AtomicDouble> wirelessMap = new HashMap<>();
     private Map<Long, AtomicDouble> pcMap = new HashMap<>();
-    private long pcMaxTimestamp = 0L;
-    private long wirelessMaxTimestamp = 0L;
-    private Set<Long> alterTimeSet = new HashSet<>();
+    private volatile long pcMaxTimestamp = 0L;
+    private volatile long wirelessMaxTimestamp = 0L;
 
+    private volatile long cycleMinTimestamp = Long.MIN_VALUE;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -69,7 +69,7 @@ public class BoltPayRatio implements IRichBolt {
                         oldValue.addAndGet(price);
                     }
                     pcMap.put(timestamp, oldValue);
-                    alterTimeSet.add(timestamp);
+                    cycleMinTimestamp = Math.min(cycleMinTimestamp, timestamp);
                 } else {// timestamp > maxPcTimestamp
                     // tuple的时间 大于最大时间，新的一分钟的数据出现了
                     AtomicDouble total = pcMap.get(pcMaxTimestamp);
@@ -86,14 +86,14 @@ public class BoltPayRatio implements IRichBolt {
                     // 该tuple的时间小于最大时间
                 } else if (timestamp == wirelessMaxTimestamp) {
                     // tuple的时间是正在处理的时间，该tuple属于当前的时间
-                    AtomicDouble oldValue = wirelessMap.get(timestamp);
-                    if (oldValue == null) {
-                        oldValue = new AtomicDouble(price);
+                    AtomicDouble total = wirelessMap.get(timestamp);
+                    if (total == null) {
+                        total = new AtomicDouble(price);
                     } else {
-                        oldValue.addAndGet(price);
+                        total.addAndGet(price);
                     }
-                    wirelessMap.put(timestamp, oldValue);
-                    alterTimeSet.add(timestamp);
+                    wirelessMap.put(timestamp, total);
+                    cycleMinTimestamp = Math.min(cycleMinTimestamp, timestamp);
                 } else {
                     // tuple的时间 大于最大时间，新的一分钟的数据出现了
                     AtomicDouble total = wirelessMap.get(wirelessMaxTimestamp);
@@ -108,33 +108,37 @@ public class BoltPayRatio implements IRichBolt {
         }
     }
 
+    /**
+     * Map 的 timestamp 的区间值修复
+     * 修复从 cur_timestamp 到 max_timestamp 的 value 值
+     * @param map
+     * @param price
+     * @param cur_timestamp
+     * @param max_timestamp
+     */
     private void countRepair(Map<Long, AtomicDouble> map, double price, long cur_timestamp, long max_timestamp) {
-        AtomicDouble curTotal = map.get(cur_timestamp);
-        if (curTotal == null) {
-            curTotal = new AtomicDouble(0.0);
+        for (long timestamp = cur_timestamp; timestamp <= max_timestamp; timestamp+= 60L) {
+            AtomicDouble curTotal = map.get(cur_timestamp);
+            if (curTotal == null) {
+                continue;
+            }
+            curTotal.addAndGet(price);
+            map.put(cur_timestamp, curTotal);
         }
-        curTotal.addAndGet(price);
-        map.put(cur_timestamp, curTotal);
-
-        AtomicDouble maxTotal = map.get(max_timestamp);
-        if (maxTotal == null) {
-            maxTotal = new AtomicDouble(0.0);
-        }
-        maxTotal.addAndGet(price);
-        map.put(max_timestamp, maxTotal);
     }
 
     private void write2Tair() {
-        for (Long time : alterTimeSet) {
-            AtomicDouble wirelessPrice = wirelessMap.get(time);
-            AtomicDouble pcPrice = pcMap.get(time);
+        long minTime = cycleMinTimestamp;
+        long maxTime = Math.min(pcMaxTimestamp, wirelessMaxTimestamp);
+        for (long timestamp = minTime; timestamp <= maxTime; timestamp += 60L) {
+            AtomicDouble wirelessPrice = wirelessMap.get(timestamp);
+            AtomicDouble pcPrice = pcMap.get(timestamp);
             if (wirelessPrice != null && pcPrice != null) {
                 double ratio = TableItemFactory.round(wirelessPrice.doubleValue() / pcPrice.doubleValue(), 2);
-                TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
-                LOG.info(">>> {}:{}", RaceConfig.prex_ratio + time, ratio);
+                TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + timestamp, ratio);
+                LOG.info(">>> {}:{}", RaceConfig.prex_ratio + timestamp, ratio);
             }
         }
-        alterTimeSet.clear();
     }
 
     @Override
