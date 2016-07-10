@@ -29,7 +29,7 @@ public class BoltTMCount implements IRichBolt {
 
     private Map<Long, AtomicDouble> tmMap = new HashMap<>();
     private ConcurrentHashMap<Long, Object> modifiedMap = new ConcurrentHashMap<>();
-    private Set<Long> timeSet = new HashSet<>();
+    private static final Object value = new Object();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -60,20 +60,20 @@ public class BoltTMCount implements IRichBolt {
             tmMap.put(timestamp, total);
 
             // 记录两次tick之间变动的时间戳
-            timeSet.add(timestamp);
+            modifiedMap.put(timestamp, value);
         }
     }
 
     private void write2Tair() {
-        for (Long timestamp: this.timeSet) {
+        for (Long timestamp: this.modifiedMap.keySet()) {
             AtomicDouble result = tmMap.get(timestamp);
             if (result != null) {
                 TairOperatorImpl.getInstance().write(
                         RaceConfig.prex_tmall + timestamp, result.doubleValue());
                 LOG.info(">>> {}:{}", RaceConfig.prex_tmall + timestamp, result.doubleValue());
             }
+            modifiedMap.remove(timestamp);
         }
-        timeSet.clear();
     }
 
     @Override

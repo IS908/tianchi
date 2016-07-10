@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by kevin on 16-7-8.
@@ -27,7 +28,8 @@ public class BoltTBCount implements IRichBolt {
     private static Logger LOG = LoggerFactory.getLogger(BoltTBCount.class);
 
     private Map<Long, AtomicDouble> tbMap = new HashMap<>();
-    private Set<Long> timeSet = new HashSet<>();
+    private ConcurrentHashMap<Long, Object> modifiedMap = new ConcurrentHashMap<>();
+    private static final Object value = new Object();
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -57,20 +59,20 @@ public class BoltTBCount implements IRichBolt {
             tbMap.put(timestamp, total);
 
             //记录两次tick之间的变动的时间戳
-            this.timeSet.add(timestamp);
+            modifiedMap.put(timestamp, value);
         }
     }
 
     private void write2Tair() {
-        for (long timestamp : this.timeSet) {
+        for (long timestamp : this.modifiedMap.keySet()) {
             AtomicDouble result = tbMap.get(timestamp);
             if (result != null) {
                 TairOperatorImpl.getInstance().write(
                         RaceConfig.prex_taobao + timestamp, result.doubleValue());
                 LOG.info(">>> {}:{}", RaceConfig.prex_taobao + timestamp, result.doubleValue());
             }
+            modifiedMap.remove(timestamp);
         }
-        timeSet.clear();
     }
 
     @Override
