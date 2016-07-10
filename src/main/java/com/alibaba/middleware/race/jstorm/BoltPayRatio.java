@@ -29,10 +29,10 @@ public class BoltPayRatio implements IRichBolt {
 
     private Map<Long, AtomicDouble> wirelessMap = new HashMap<>();
     private Map<Long, AtomicDouble> pcMap = new HashMap<>();
-    private volatile long pcMaxTimestamp = 0L;
-    private volatile long wirelessMaxTimestamp = 0L;
+    private long pcMaxTimestamp = 0L;
+    private long wirelessMaxTimestamp = 0L;
 
-    private volatile long cycleMinTimestamp = Long.MIN_VALUE;
+    private long cycleMinTimestamp = Long.MIN_VALUE;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
