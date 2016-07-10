@@ -28,7 +28,6 @@ public class BoltTBCount implements IRichBolt {
 
     private Map<Long, AtomicDouble> tbMap = new HashMap<>();
     private Set<Long> timeSet = new HashSet<>();
-    private boolean flag = false;
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -37,12 +36,10 @@ public class BoltTBCount implements IRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        if (flag
-                && tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
+        if (tuple.getSourceComponent().equals(Constants.SYSTEM_COMPONENT_ID)
                 && tuple.getSourceStreamId().equals(Constants.SYSTEM_TICK_STREAM_ID)) {
             // 系统计时信号，执行写tair操作
             write2Tair();
-            flag = false;
         } else if (tuple.getSourceComponent().equals(RaceConstant.ID_SPLIT_PLATFORM)
                 && tuple.getSourceStreamId().equals(RaceConstant.STREAM_STOP)) {
             // 结束信号，执行写tair操作
@@ -61,7 +58,6 @@ public class BoltTBCount implements IRichBolt {
 
             //记录两次tick之间的变动的时间戳
             this.timeSet.add(timestamp);
-            flag = true;
         }
     }
 

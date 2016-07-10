@@ -125,18 +125,16 @@ public class BoltPayRatio implements IRichBolt {
     }
 
     private void write2Tair() {
-        if (!alterTimeSet.isEmpty()) {
-            for (Long time : alterTimeSet) {
-                AtomicDouble wirelessPrice = wirelessMap.get(time);
-                AtomicDouble pcPrice = pcMap.get(time);
-                if (wirelessPrice != null && pcPrice != null) {
-                    double ratio = TableItemFactory.round(wirelessPrice.doubleValue() / pcPrice.doubleValue(), 2);
-                    TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
-                    LOG.info(">>> {}:{}", RaceConfig.prex_ratio + time, ratio);
-                }
+        for (Long time : alterTimeSet) {
+            AtomicDouble wirelessPrice = wirelessMap.get(time);
+            AtomicDouble pcPrice = pcMap.get(time);
+            if (wirelessPrice != null && pcPrice != null) {
+                double ratio = TableItemFactory.round(wirelessPrice.doubleValue() / pcPrice.doubleValue(), 2);
+                TairOperatorImpl.getInstance().write(RaceConfig.prex_ratio + time, ratio);
+                LOG.info(">>> {}:{}", RaceConfig.prex_ratio + time, ratio);
             }
-            alterTimeSet.clear();
         }
+        alterTimeSet.clear();
     }
 
     @Override
