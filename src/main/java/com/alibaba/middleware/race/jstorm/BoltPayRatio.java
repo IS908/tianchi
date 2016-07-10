@@ -139,6 +139,7 @@ public class BoltPayRatio implements IRichBolt {
                 LOG.info(">>> {}:{}", RaceConfig.prex_ratio + timestamp, ratio);
             }
         }
+        cycleMinTimestamp = maxTime;
     }
 
     @Override
