@@ -62,7 +62,6 @@ public class BoltTBCount implements IRichBolt {
     }
 
     private void write2Tair() {
-        if (timeSet.isEmpty())  return;
         for (long timestamp : this.timeSet) {
             AtomicDouble result = tbMap.get(timestamp);
             if (result != null) {
